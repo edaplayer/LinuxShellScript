@@ -35,7 +35,7 @@ if [ -e "$SCRIPT_PATH" ];then
 fi
 
 PRODUCT_DIR=./out/target/product/
-PACK_PROJECT=`ls $PRODUCT_DIR`
+PACK_PROJECT=`ls $PRODUCT_DIR 2>/dev/null`
 
 function showRocoProjectMenu(){
 	i=1
@@ -51,18 +51,20 @@ function showRocoProjectMenu(){
 }
 
 function choosePackProject(){
-	echo "What project do you want pack?:"
-	read choose
-	j=1
+    local choice
+    local subproject
+	echo "What project do you want to pack:"
+	read choice
+	local i=1
 	for subproject in $PACK_PROJECT
 	do
 
 		if [ -d $PRODUCT_DIR/$subproject ];then
-			if [ "$choose" == "$j" ];then
+			if [ "$choice" == "$i" ];then
 				TARGET_PRODUCT=$subproject
                 GREEN "TARGET_PRODUCT=$subproject"
 			fi
-			j=$(($j+1))
+			i=$(($i+1))
 		fi
 	done
 	if [ -z "$TARGET_PRODUCT" ];then
@@ -73,11 +75,11 @@ function choosePackProject(){
 
 function readDefaultPackName(){
     echo "Select:"
-	read choose
+	read choice
 	q=1
 	for subproject in $DISPLAY $VERSION
 	do
-		if [ "$choose" == "$q" ];then
+		if [ "$choice" == "$q" ];then
 			TARGET=$subproject
 			GREEN "TARGET=$TARGET"
 		fi
