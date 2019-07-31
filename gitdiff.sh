@@ -78,7 +78,7 @@ function git_stash()
 }
 
 # --------------------------------------------------------------------------#
-# @brief fetch_list ，copy diff_list 列表中的所有文件到$1路径
+# @brief fetch_list ，copy diff_list 列表中的所有文件到$1路径(通过git checkout方式)
 # param1 目标路径
 # param2 log路径
 # ----------------------------------------------------------------------------#
@@ -136,6 +136,115 @@ function fetch_list()
             echo "$TAG: $FILE" >> $2
         fi
     done
+}
+
+# --------------------------------------------------------------------------#
+# @function get_commit_files
+# @brief copy差异列表中的所有文件到目标路径(通过git show方式)
+# param1 commmit id
+# param2 目标路径
+# param3 log路径
+# ----------------------------------------------------------------------------#
+function get_commit_files()
+{
+    local commit_id="$1"
+    local target_path="$2"
+    local target_log="$3"
+    if [ ! -z "$target_log" ]; then
+        local separation="================================================================================"
+        echo $separation >> "$target_log"
+        echo $Patch Time : $TIME >> "$target_log"
+        echo $Git Branch : $BRANCH >> "$target_log"
+        echo -e "\nSave log message to $target_log:\n "
+        git log -1 | tee -a "$target_log"
+    fi
+
+    echo
+    GREEN fetch_list
+
+    local f
+    local FILE
+    local dir
+
+    for f in $diff_list
+    do
+        FILE=${f:1}  #第2个字符到末尾
+        TAG=${f:0:1} #第1个字符
+        if [ "$TAG" == "M" ];then
+            TAG=$MODIFIED_TAG
+            GREEN  "$TAG  $FILE"
+        elif [ "$TAG" == "D" ];then
+            TAG=$DELETED_TAG
+            RED "$TAG  $FILE"
+        elif [ "$TAG" == "A" ];then
+            TAG=$ADDED_TAG
+            YELLOW "$TAG  $FILE"
+        else
+            error "Error: invaild TAG $TAG"
+        fi
+
+        # 检查是否需要创建父目录
+        dir=`dirname "$FILE"`
+        [ -d "$dir" ] && mkdir -p "$target_path"/"$dir"
+
+        # 目标是文件，直接copy 文件
+        if [ -f  "$FILE" ]; then
+            git show ${commit_id}:"$FILE" > "${target_path}"/"$FILE"
+        elif [ -d  "$FILE" ]; then
+            # 如果目标是目录(这种情况只有fetch_current模式才会出现)，拷贝到目标父目录
+            cp  -rfa "$FILE" "$target_path"/"$dir"
+        else
+            RED "Error: $FILE couldn't be found."
+        fi
+
+        # 保存差异列表到readme.txt，如Mod: code.c
+        if [ ! -z $target_log ]; then
+            echo "$TAG: $FILE" >> "$target_log"
+        fi
+    done
+}
+
+# func fetch_commit_show
+# param1 commit-old
+# param2 commit-new
+# return none
+function fetch_commit_show()
+{
+    if [ ! -z $2 ];then
+        # 有2个参数，指定两个commit节点比较
+        AFTER_COMMIT=$2
+        BEFORE_COMMIT=$1
+    else
+        # 1个参数，只对该节点前后比较
+        AFTER_COMMIT=$1
+        BEFORE_COMMIT=$1^
+    fi
+
+    GREEN AFTER_COMMIT=$AFTER_COMMIT
+    GREEN BEFORE_COMMIT=$BEFORE_COMMIT
+    GREEN "Run fetch_commit_show now."
+
+    mkdir -p $DEST_PATH
+    git show $AFTER_COMMIT > $DEST_PATH/commit.diff
+
+    diff_list=`git diff --name-status $BEFORE_COMMIT $AFTER_COMMIT |\
+            sed -e 's/[ \t]\+//g' -e 's/^??/A/g'`
+    echo -e "\nafter diff_list=\n$diff_list\n"
+    # 取出目标新节点中有改动的文件
+    GREEN "Step1: get after $AFTER_COMMIT files."
+    mkdir -p $DEST_PATH/after
+    get_commit_files $AFTER_COMMIT "$DEST_PATH"/after $LOG_PATH
+
+    # 取出旧节点（before文件）
+    # diff_list=`git diff --name-status $BEFORE_COMMIT $AFTER_COMMIT |\
+            # sed -e 's/[ \t]\+//g' -e 's/^??/A/g'`
+
+    echo -e "\nbefore diff_list=\n$diff_list\n"
+    GREEN "Step2: get before $BEFORE_COMMIT files."
+
+    mkdir -p $DEST_PATH/before
+    get_commit_files $BEFORE_COMMIT "$DEST_PATH"/before
+    GREEN "fetch_commit_show success."
 }
 
 # func fetch_commit
@@ -289,7 +398,7 @@ function checkout_files()
     if [ $# != 0 ];then
         if [ "$DIFF_COMMIT" = 1 ];then
             echo -e "\nCommit mode"
-            fetch_commit $@
+            fetch_commit_show $@
         elif [ "$DIFF_BRANCH" = 1 ];then
             echo -e "\nBranch mode"
             fetch_branch $@
