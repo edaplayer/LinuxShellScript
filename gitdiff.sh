@@ -94,7 +94,6 @@ function fetch_list()
     fi
 
     echo
-    GREEN fetch_list
 
     local f
     local FILE
@@ -160,7 +159,6 @@ function get_commit_files()
     fi
 
     echo
-    GREEN fetch_list
 
     local f
     local FILE
@@ -308,6 +306,8 @@ function fetch_commit()
 # return none
 function fetch_current()
 {
+    mkdir -p $DEST_PATH
+    git diff > $DEST_PATH/current.diff
     # 取出已修改的文件（默认不包含未跟踪的文件）
     # git status相当于git status -unormal，而git status -u相当于git status -uall，子目录文件也会被显示
     diff_list=`git status -s$UNTRACK | sed -e 's/[ \t]\+//g' -e 's/^??/A/g'`
@@ -318,19 +318,18 @@ function fetch_current()
         # diff_list=`git status -s | sed -e 's/[ \t]\+//g' -e 's/^??/A/g'`
     # fi
 
+    GREEN "\nStep1: fetch_list"
     GREEN "diff_list=\n$diff_list"
     mkdir -p $DEST_PATH/after
     fetch_list "$DEST_PATH"/after $LOG_PATH
 
     # 保存现场，取出原始文件（排除未跟踪的文件）
+    GREEN "\nStep2: get_commit_files"
     diff_list=`git status -suno | sed -e 's/[ \t]\+//g' -e 's/^??/A/g'`
     # diff_list=`git diff --name-status HEAD | sed -e 's/[ \t]\+//g' -e 's/^??/A/g'`
-    echo -e "\ncurrent diff_list=\n$diff_list\n"
-    git stash > /dev/null
-    git checkout .
+    GREEN "diff_list=\n$diff_list"
     mkdir -p $DEST_PATH/before
-    fetch_list "$DEST_PATH"/before
-    git stash pop > /dev/null
+    get_commit_files HEAD "$DEST_PATH"/before
 }
 
 # func fetch_branch
