@@ -410,9 +410,10 @@ function checkout_files()
 
 function parse_arg()
 {
-    ARGS=`getopt -o a:cdhtu -- "$@"`
+    ARGS=`getopt -o a:cdhtu: -- "$@"`
+    echo ARGS="$ARGS"
     eval set -- ${ARGS}
-    while getopts "a:cdhtu" opt
+    while getopts "a:cdhtu:" opt
     do
         case $opt in
             a)
@@ -431,7 +432,7 @@ function parse_arg()
                 ALIAS=$TIME
                 ;;
             u)
-                UNTRACK=unormal
+                UNTRACK=u$OPTARG
                 ;;
             h)
                 usage
