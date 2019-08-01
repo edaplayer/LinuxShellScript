@@ -98,8 +98,18 @@ function fetch_list()
     local f
     local FILE
     local dir
+    local file_list
 
-    for f in $diff_list
+    echo "$diff_list" > tmp.tmp
+    local n=0
+    while read f
+    do
+        file_list[n]="$f"
+        let n++
+    done < tmp.tmp
+    rm tmp.tmp
+
+    for f in "${file_list[@]}"
     do
         FILE=${f:1}  #第2个字符到末尾
         TAG=${f:0:1} #第1个字符
@@ -163,8 +173,19 @@ function get_commit_files()
     local f
     local FILE
     local dir
+    local file_list
+    GREEN "get_commit_files"
+    GREEN "diff_list=$diff_list"
+    echo "$diff_list" > tmp.tmp
+    local n=0
+    while read f
+    do
+        file_list[n]="$f"
+        let n++
+    done < tmp.tmp
+    rm tmp.tmp
 
-    for f in $diff_list
+    for f in "${file_list[@]}"
     do
         FILE=${f:1}  #第2个字符到末尾
         TAG=${f:0:1} #第1个字符
@@ -181,19 +202,12 @@ function get_commit_files()
             error "Error: invaild TAG $TAG"
         fi
 
-        # 检查是否需要创建父目录
+        # 创建父目录
         dir=`dirname "$FILE"`
-        [ -d "$dir" ] && mkdir -p "$target_path"/"$dir"
+        mkdir -p "$target_path"/"$dir"
 
-        # 目标是文件，直接copy 文件
-        if [ -f  "$FILE" ]; then
-            git show ${commit_id}:"$FILE" > "${target_path}"/"$FILE"
-        elif [ -d  "$FILE" ]; then
-            # 如果目标是目录(这种情况只有fetch_current模式才会出现)，拷贝到目标父目录
-            cp  -rfa "$FILE" "$target_path"/"$dir"
-        else
-            RED "Error: $FILE couldn't be found."
-        fi
+        # git show得到的一定是文件路径，直接copy 文件
+        git show ${commit_id}:"$FILE" > "${target_path}"/"$FILE"
 
         # 保存差异列表到readme.txt，如Mod: code.c
         if [ ! -z $target_log ]; then
@@ -439,7 +453,7 @@ function checkout_files()
         fi
     else
         echo -e "\nCurrent mode"
-        fetch_current
+        fetch_current_show
     fi
 }
 
