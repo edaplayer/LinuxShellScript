@@ -237,7 +237,7 @@ function fetch_commit_show()
     GREEN "Run fetch_commit_show now."
 
     mkdir -p $DEST_PATH
-    git show $AFTER_COMMIT > $DEST_PATH/commit.diff
+    git diff $BEFORE_COMMIT $AFTER_COMMIT > $DEST_PATH/commit.diff
 
     diff_list=`git diff --name-status $BEFORE_COMMIT $AFTER_COMMIT |\
             sed -e 's/^\s\+//' -e 's/\s\+//' -e 's/^??/A/g'`
