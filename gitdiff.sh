@@ -148,13 +148,13 @@ function fetch_list()
 }
 
 # --------------------------------------------------------------------------#
-# @function get_commit_files
+# @function fetch_list_show
 # @brief copy差异列表中的所有文件到目标路径(通过git show方式)
 # param1 commmit id
 # param2 目标路径
 # param3 log路径
 # ----------------------------------------------------------------------------#
-function get_commit_files()
+function fetch_list_show()
 {
     local commit_id="$1"
     local target_path="$2"
@@ -174,7 +174,7 @@ function get_commit_files()
     local FILE
     local dir
     local file_list
-    GREEN "get_commit_files"
+    GREEN "fetch_list_show"
     GREEN "diff_list=$diff_list"
     echo "$diff_list" > tmp.tmp
     local n=0
@@ -245,7 +245,7 @@ function fetch_commit_show()
     # 取出目标新节点中有改动的文件
     GREEN "Step1: get after $AFTER_COMMIT files."
     mkdir -p $DEST_PATH/after
-    get_commit_files $AFTER_COMMIT "$DEST_PATH"/after $LOG_PATH
+    fetch_list_show $AFTER_COMMIT "$DEST_PATH"/after $LOG_PATH
 
     # 取出旧节点（before文件）
     GREEN "Step2: get before $BEFORE_COMMIT files."
@@ -255,7 +255,7 @@ function fetch_commit_show()
     echo -e "\nbefore diff_list=\n$diff_list\n"
 
     mkdir -p $DEST_PATH/before
-    get_commit_files $BEFORE_COMMIT "$DEST_PATH"/before
+    fetch_list_show $BEFORE_COMMIT "$DEST_PATH"/before
     GREEN "fetch_commit_show success."
 }
 
@@ -338,12 +338,12 @@ function fetch_current_show()
     fetch_list "$DEST_PATH"/after $LOG_PATH
 
     # 保存现场，取出原始文件（排除未跟踪的文件）
-    GREEN "\nStep2: get_commit_files"
+    GREEN "\nStep2: fetch_list_show"
     diff_list=`git status -suno | sed -e 's/^\s\+//' -e 's/\s\+//' -e 's/^??/A/g'`
     # diff_list=`git diff --name-status HEAD | sed -e 's/[ \t]\+//g' -e 's/^??/A/g'`
     GREEN "diff_list=\n$diff_list"
     mkdir -p $DEST_PATH/before
-    get_commit_files HEAD "$DEST_PATH"/before
+    fetch_list_show HEAD "$DEST_PATH"/before
     GREEN "fetch_current_show success."
 }
 
