@@ -84,13 +84,15 @@ function git_stash()
 # ----------------------------------------------------------------------------#
 function fetch_list()
 {
-    if [ ! -z $2 ]; then
+    local target_path="$1"
+    local target_log="$2"
+    if [ ! -z "$target_log" ]; then
         local separation="========================================================================================"
-        echo $separation >> $2
-        echo $Patch Time : $TIME >> $2
-        echo $Git Branch : $BRANCH >> $2
-        echo -e "\nSave log message to $2:\n "
-        git log -1 | tee -a $2
+        echo $separation >> "$target_log"
+        echo $Patch Time : $TIME >> "$target_log"
+        echo $Git Branch : $BRANCH >> "$target_log"
+        echo -e "\nSave log message to "$target_log":\n "
+        git log -1 | tee -a "$target_log"
     fi
 
     echo
@@ -128,21 +130,21 @@ function fetch_list()
 
         # 检查是否需要创建父目录
         dir=`dirname "$FILE"`
-        [ -d "$dir" ] && mkdir -p $1/"$dir"
+        [ -d "$dir" ] && mkdir -p "$target_path"/"$dir"
 
         # 目标是文件，直接copy 文件
         if [ -f  "$FILE" ]; then
-            cp -rfa "$FILE" "$1"/"$FILE"
+            cp -rfa "$FILE" "$target_path"/"$FILE"
         elif [ -d  "$FILE" ]; then
             # 如果目标是目录(这种情况只有fetch_current模式才会出现)，拷贝到目标父目录
-            cp  -rfa "$FILE" "$1"/"$dir"
+            cp  -rfa "$FILE" "$target_path"/"$dir"
         else
             RED "Error: $FILE couldn't be found."
         fi
 
         # 保存文件列表到readme.txt，如Mod: code.c
-        if [ ! -z $2 ]; then
-            echo "$TAG: $FILE" >> $2
+        if [ ! -z "$target_log" ]; then
+            echo "$TAG: $FILE" >> "$target_log"
         fi
     done
 }
@@ -165,7 +167,7 @@ function fetch_list_show()
         echo $Patch Time : $TIME >> "$target_log"
         echo $Git Branch : $BRANCH >> "$target_log"
         echo -e "\nSave log message to $target_log:\n "
-        git log -1 | tee -a "$target_log"
+        git log ${commit_id} -1 | tee -a "$target_log"
     fi
 
     echo
