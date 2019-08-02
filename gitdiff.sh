@@ -111,8 +111,8 @@ function fetch_list()
 
     for f in "${file_list[@]}"
     do
-        FILE=${f:1}  #第2个字符到末尾
         TAG=${f:0:1} #第1个字符
+        FILE=${f:1}  #第2个字符到末尾
         if [ "$TAG" == "M" ];then
             TAG=$MODIFIED_TAG
             GREEN  "$TAG  $FILE"
@@ -187,8 +187,8 @@ function get_commit_files()
 
     for f in "${file_list[@]}"
     do
-        FILE=${f:1}  #第2个字符到末尾
         TAG=${f:0:1} #第1个字符
+        FILE=${f:1}  #第2个字符到末尾
         if [ "$TAG" == "M" ];then
             TAG=$MODIFIED_TAG
             GREEN  "$TAG  $FILE"
@@ -358,12 +358,6 @@ function fetch_current()
     # git status相当于git status -unormal，而git status -u相当于git status -uall，子目录文件也会被显示
     diff_list=`git status -s$UNTRACK | sed -e 's/^\s\+//' -e 's/\s\+//' -e 's/^??/A/g'`
 
-    # if [ "$UNTRACK" == "no" ]; then
-        # diff_list=`git diff --name-status HEAD | sed -e 's/[ \t]\+//g' -e 's/^??/A/g'`
-    # else
-        # diff_list=`git status -s | sed -e 's/[ \t]\+//g' -e 's/^??/A/g'`
-    # fi
-
     GREEN "\nStep1: fetch_list after"
     GREEN "diff_list=\n$diff_list"
     mkdir -p $DEST_PATH/after
@@ -372,7 +366,6 @@ function fetch_current()
     # 保存现场，取出原始文件（排除未跟踪的文件）
     GREEN "\nStep2: fetch_list before"
     diff_list=`git status -suno | sed -e 's/^\s\+//' -e 's/\s\+//' -e 's/^??/A/g'`
-    # diff_list=`git diff --name-status HEAD | sed -e 's/[ \t]\+//g' -e 's/^??/A/g'`
     echo -e "\ncurrent diff_list=\n$diff_list\n"
     git stash > /dev/null
     git checkout .
