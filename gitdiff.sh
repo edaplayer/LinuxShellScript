@@ -204,10 +204,10 @@ function get_commit_files()
 
         # 创建父目录
         dir=`dirname "$FILE"`
-        mkdir -p "$target_path"/"$dir"
+        [ -d "$target_path"/"$dir" ] || mkdir -p "$target_path"/"$dir"
 
         # git show得到的一定是文件路径，直接copy 文件
-        git show ${commit_id}:"$FILE" > "${target_path}"/"$FILE"
+        git show ${commit_id}:"$FILE" 1>"${target_path}"/"$FILE" || rm "${target_path}"/"$FILE"
 
         # 保存差异列表到readme.txt，如Mod: code.c
         if [ ! -z $target_log ]; then
@@ -344,6 +344,7 @@ function fetch_current_show()
     GREEN "diff_list=\n$diff_list"
     mkdir -p $DEST_PATH/before
     get_commit_files HEAD "$DEST_PATH"/before
+    GREEN "fetch_current_show success."
 }
 
 # func fetch_current
