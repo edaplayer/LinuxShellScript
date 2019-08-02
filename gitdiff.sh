@@ -248,11 +248,11 @@ function fetch_commit_show()
     get_commit_files $AFTER_COMMIT "$DEST_PATH"/after $LOG_PATH
 
     # 取出旧节点（before文件）
-    # diff_list=`git diff --name-status $BEFORE_COMMIT $AFTER_COMMIT |\
-            # sed -e 's/[ \t]\+//g' -e 's/^??/A/g'`
-
-    echo -e "\nbefore diff_list=\n$diff_list\n"
     GREEN "Step2: get before $BEFORE_COMMIT files."
+
+    diff_list=`git diff --name-status $BEFORE_COMMIT $AFTER_COMMIT |\
+            sed -e 's/^\s\+//' -e 's/\s\+//' -e 's/^??/A/g' -e 's/^A.*//'`
+    echo -e "\nbefore diff_list=\n$diff_list\n"
 
     mkdir -p $DEST_PATH/before
     get_commit_files $BEFORE_COMMIT "$DEST_PATH"/before
