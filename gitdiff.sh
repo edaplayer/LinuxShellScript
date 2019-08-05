@@ -93,9 +93,8 @@ function fetch_list()
         echo $Git Branch : $BRANCH >> "$target_log"
         echo -e "\nSave log message to "$target_log":\n "
         git log -1 | tee -a "$target_log"
+        echo
     fi
-
-    echo
 
     local f
     local FILE
@@ -168,9 +167,8 @@ function fetch_list_show()
         echo $Git Branch : $BRANCH >> "$target_log"
         echo -e "\nSave log message to $target_log:\n "
         git log ${commit_id} -1 | tee -a "$target_log"
+        echo
     fi
-
-    echo
 
     local f
     local FILE
@@ -234,27 +232,27 @@ function fetch_commit_show()
         BEFORE_COMMIT=$1^
     fi
 
-    GREEN AFTER_COMMIT=$AFTER_COMMIT
-    GREEN BEFORE_COMMIT=$BEFORE_COMMIT
+    GREEN "AFTER_COMMIT=$AFTER_COMMIT"
+    GREEN "BEFORE_COMMIT=$BEFORE_COMMIT\n"
     GREEN "Run fetch_commit_show now."
 
     mkdir -p $DEST_PATH
     git diff $BEFORE_COMMIT $AFTER_COMMIT > $DEST_PATH/commit.diff
 
+    # 取出目标新节点中有改动的文件
+    GREEN "Step1: get after $AFTER_COMMIT files.\n"
     diff_list=`git diff --name-status $BEFORE_COMMIT $AFTER_COMMIT |\
             sed -e 's/^\s\+//' -e 's/\s\+//' -e 's/^??/A/g'`
-    echo -e "\nafter diff_list=\n$diff_list\n"
-    # 取出目标新节点中有改动的文件
-    GREEN "Step1: get after $AFTER_COMMIT files."
+    echo -e "after diff_list=\n$diff_list\n"
     mkdir -p $DEST_PATH/after
     fetch_list_show $AFTER_COMMIT "$DEST_PATH"/after $LOG_PATH
 
     # 取出旧节点（before文件）
-    GREEN "Step2: get before $BEFORE_COMMIT files."
+    GREEN "Step2: get before $BEFORE_COMMIT files.\n"
 
     diff_list=`git diff --name-status $BEFORE_COMMIT $AFTER_COMMIT |\
             sed -e 's/^\s\+//' -e 's/\s\+//' -e 's/^??/A/g' -e 's/^A.*//'`
-    echo -e "\nbefore diff_list=\n$diff_list\n"
+    echo -e "before diff_list=\n$diff_list\n"
 
     mkdir -p $DEST_PATH/before
     fetch_list_show $BEFORE_COMMIT "$DEST_PATH"/before
@@ -277,8 +275,8 @@ function fetch_commit()
         BEFORE_COMMIT=$1^
     fi
 
-    GREEN AFTER_COMMIT=$AFTER_COMMIT
-    GREEN BEFORE_COMMIT=$BEFORE_COMMIT
+    GREEN "AFTER_COMMIT=$AFTER_COMMIT"
+    GREEN "BEFORE_COMMIT=$BEFORE_COMMIT\n"
 
     echo "Current mode is diff commit mode, git stash may need to be executed."
     git_stash
@@ -334,13 +332,13 @@ function fetch_current_show()
         # diff_list=`git status -s | sed -e 's/[ \t]\+//g' -e 's/^??/A/g'`
     # fi
 
-    GREEN "\nStep1: fetch_list"
+    GREEN "Step1: fetch_list\n"
     GREEN "diff_list=\n$diff_list"
     mkdir -p $DEST_PATH/after
     fetch_list "$DEST_PATH"/after $LOG_PATH
 
     # 保存现场，取出原始文件（排除未跟踪的文件）
-    GREEN "\nStep2: fetch_list_show"
+    GREEN "Step2: fetch_list_show\n"
     diff_list=`git status -suno | sed -e 's/^\s\+//' -e 's/\s\+//' -e 's/^??/A/g'`
     # diff_list=`git diff --name-status HEAD | sed -e 's/[ \t]\+//g' -e 's/^??/A/g'`
     GREEN "diff_list=\n$diff_list"
@@ -451,6 +449,7 @@ function checkout_files()
         echo -e "\nCurrent mode"
         fetch_current_show
     fi
+    GREEN "\n###### Generate diff files success. ######"
 }
 
 function parse_arg()
