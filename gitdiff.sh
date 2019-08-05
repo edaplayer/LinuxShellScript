@@ -91,7 +91,7 @@ function fetch_list()
         echo $separation >> "$target_log"
         echo $Patch Time : $TIME >> "$target_log"
         echo $Git Branch : $BRANCH >> "$target_log"
-        echo -e "\nSave log message to "$target_log":\n "
+        echo -e "Save log message to "$target_log":\n "
         git log -1 | tee -a "$target_log"
         echo
     fi
@@ -112,6 +112,7 @@ function fetch_list()
 
     for f in "${file_list[@]}"
     do
+        [ -z "$f" ] && continue
         TAG=${f:0:1} #第1个字符
         FILE=${f:1}  #第2个字符到末尾
         if [ "$TAG" == "M" ];then
@@ -165,7 +166,7 @@ function fetch_list_show()
         echo $separation >> "$target_log"
         echo $Patch Time : $TIME >> "$target_log"
         echo $Git Branch : $BRANCH >> "$target_log"
-        echo -e "\nSave log message to $target_log:\n "
+        echo -e "Save log message to $target_log:\n "
         git log ${commit_id} -1 | tee -a "$target_log"
         echo
     fi
@@ -187,6 +188,7 @@ function fetch_list_show()
 
     for f in "${file_list[@]}"
     do
+        [ -z "$f" ] && continue
         TAG=${f:0:1} #第1个字符
         FILE=${f:1}  #第2个字符到末尾
         if [ "$TAG" == "M" ];then
