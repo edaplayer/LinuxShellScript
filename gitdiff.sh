@@ -128,6 +128,11 @@ function fetch_list()
             error "Error: invaild TAG $TAG"
         fi
 
+        # 保存文件列表到readme.txt，如Mod: code.c
+        if [ ! -z "$target_log" ]; then
+            echo "$TAG: $FILE" >> "$target_log"
+        fi
+
         # 检查是否需要创建父目录
         dir=`dirname "$FILE"`
         [ -d "$dir" ] && mkdir -p "$target_path"/"$dir"
@@ -140,11 +145,6 @@ function fetch_list()
             cp  -rfa "$FILE" "$target_path"/"$dir"
         else
             RED "Error: $FILE couldn't be found."
-        fi
-
-        # 保存文件列表到readme.txt，如Mod: code.c
-        if [ ! -z "$target_log" ]; then
-            echo "$TAG: $FILE" >> "$target_log"
         fi
     done
 }
@@ -204,17 +204,17 @@ function fetch_list_show()
             error "Error: invaild TAG $TAG"
         fi
 
+        # 保存差异列表到readme.txt，如Mod: code.c
+        if [ ! -z $target_log ]; then
+            echo "$TAG: $FILE" >> "$target_log"
+        fi
+
         # 创建父目录
         dir=`dirname "$FILE"`
         [ -d "$target_path"/"$dir" ] || mkdir -p "$target_path"/"$dir"
 
         # git show得到的一定是文件路径，直接copy 文件
         git show ${commit_id}:"$FILE" 1>"${target_path}"/"$FILE" || rm "${target_path}"/"$FILE"
-
-        # 保存差异列表到readme.txt，如Mod: code.c
-        if [ ! -z $target_log ]; then
-            echo "$TAG: $FILE" >> "$target_log"
-        fi
     done
 }
 
