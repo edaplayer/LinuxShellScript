@@ -244,7 +244,7 @@ function fetch_commit_show()
     # 取出目标新节点中有改动的文件
     GREEN "Step1: get after $AFTER_COMMIT files.\n"
     diff_list=`git diff --name-status $BEFORE_COMMIT $AFTER_COMMIT |\
-            sed -e 's/^\s\+//' -e 's/\s\+//' -e 's/^??/A/g'`
+            sed -re 's/^\s*(\S+)\s+/\1/' -e 's/^\?\?/A/g'`
     echo -e "after diff_list=\n$diff_list\n"
     mkdir -p $DEST_PATH/after
     fetch_list_show $AFTER_COMMIT "$DEST_PATH"/after $LOG_PATH
@@ -253,7 +253,7 @@ function fetch_commit_show()
     GREEN "Step2: get before $BEFORE_COMMIT files.\n"
 
     diff_list=`git diff --name-status $BEFORE_COMMIT $AFTER_COMMIT |\
-            sed -e 's/^\s\+//' -e 's/\s\+//' -e 's/^??/A/g' -e 's/^A.*//'`
+            sed -re 's/^\s*(\S+)\s+/\1/' -e 's/^\?\?/A/g' -e 's/^A.*//'`
     echo -e "before diff_list=\n$diff_list\n"
 
     mkdir -p $DEST_PATH/before
@@ -289,7 +289,7 @@ function fetch_commit()
 
     # 取出目标新节点中有改动的文件
     diff_list=`git diff --name-status $BEFORE_COMMIT $AFTER_COMMIT |
-            sed -e 's/^\s\+//' -e 's/\s\+//' -e 's/^??/A/g'`
+            sed -re 's/^\s*(\S+)\s+/\1/' -e 's/^\?\?/A/g'`
     echo -e "\nafter diff_list=\n$diff_list\n"
     git checkout $AFTER_COMMIT 1>/dev/null 2>&1
     [ $? == 0 ] && GREEN "Step1: Checkout after $AFTER_COMMIT success." ||
@@ -299,7 +299,7 @@ function fetch_commit()
 
     # 取出旧节点（before文件）
     diff_list=`git diff --name-status $BEFORE_COMMIT $AFTER_COMMIT |
-            sed -e 's/^\s\+//' -e 's/\s\+//' -e 's/^??/A/g'`
+            sed -re 's/^\s*(\S+)\s+/\1/' -e 's/^\?\?/A/g'`
     echo -e "\nbefore diff_list=\n$diff_list\n"
     git checkout $BEFORE_COMMIT 1>/dev/null 2>&1
     [ $? == 0 ] && GREEN "Step2: Checkout before $BEFORE_COMMIT success." ||
@@ -326,13 +326,7 @@ function fetch_current_show()
     git diff > $DEST_PATH/current.diff
     # 取出已修改的文件（默认不包含未跟踪的文件）
     # git status相当于git status -unormal，而git status -u相当于git status -uall，子目录文件也会被显示
-    diff_list=`git status -s$UNTRACK | sed -e 's/^\s\+//' -e 's/\s\+//' -e 's/^??/A/g'`
-
-    # if [ "$UNTRACK" == "no" ]; then
-        # diff_list=`git diff --name-status HEAD | sed -e 's/[ \t]\+//g' -e 's/^??/A/g'`
-    # else
-        # diff_list=`git status -s | sed -e 's/[ \t]\+//g' -e 's/^??/A/g'`
-    # fi
+    diff_list=`git status -s$UNTRACK | sed -re 's/^\s*(\S+)\s+/\1/' -e 's/^\?\?/A/g'`
 
     GREEN "Step1: fetch_list\n"
     GREEN "diff_list=\n$diff_list"
@@ -341,8 +335,7 @@ function fetch_current_show()
 
     # 保存现场，取出原始文件（排除未跟踪的文件）
     GREEN "Step2: fetch_list_show\n"
-    diff_list=`git status -suno | sed -e 's/^\s\+//' -e 's/\s\+//' -e 's/^??/A/g'`
-    # diff_list=`git diff --name-status HEAD | sed -e 's/[ \t]\+//g' -e 's/^??/A/g'`
+    diff_list=`git status -suno | sed -re 's/^\s*(\S+)\s+/\1/' -e 's/^\?\?/A/g'`
     GREEN "diff_list=\n$diff_list"
     mkdir -p $DEST_PATH/before
     fetch_list_show HEAD "$DEST_PATH"/before
@@ -359,7 +352,7 @@ function fetch_current()
     git diff > $DEST_PATH/current.diff
     # 取出已修改的文件（默认不包含未跟踪的文件）
     # git status相当于git status -unormal，而git status -u相当于git status -uall，子目录文件也会被显示
-    diff_list=`git status -s$UNTRACK | sed -e 's/^\s\+//' -e 's/\s\+//' -e 's/^??/A/g'`
+    diff_list=`git status -s$UNTRACK | sed -re 's/^\s*(\S+)\s+/\1/' -e 's/^\?\?/A/g'`
 
     GREEN "\nStep1: fetch_list after"
     GREEN "diff_list=\n$diff_list"
@@ -368,7 +361,7 @@ function fetch_current()
 
     # 保存现场，取出原始文件（排除未跟踪的文件）
     GREEN "\nStep2: fetch_list before"
-    diff_list=`git status -suno | sed -e 's/^\s\+//' -e 's/\s\+//' -e 's/^??/A/g'`
+    diff_list=`git status -suno | sed -re 's/^\s*(\S+)\s+/\1/' -e 's/^\?\?/A/g'`
     echo -e "\ncurrent diff_list=\n$diff_list\n"
     git stash > /dev/null
     git checkout .
@@ -388,7 +381,7 @@ function fetch_branch()
 
     mkdir -p $DEST_PATH/after
     # 比较当前分支和目标分支的差异
-    diff_list=`git diff --name-status $1 | sed -e 's/^\s\+//' -e 's/\s\+//' -e 's/^??/A/g'`
+    diff_list=`git diff --name-status $1 | sed -re 's/^\s*(\S+)\s+/\1/' -e 's/^\?\?/A/g'`
     fetch_list $DEST_PATH/after $LOG_PATH
     # 切换到目标分支
     git checkout $1
