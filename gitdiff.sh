@@ -5,28 +5,28 @@ YELLOW='\e[1;33m'
 END='\e[0m'
 RED()
 {
-	echo -e  "${RED}$@${END}"
+	echo -e  "${RED}$*${END}"
 }
 
 GREEN()
 {
-	echo -e  "${GREEN}$@${END}"
+	echo -e  "${GREEN}$*${END}"
 }
 
 YELLOW()
 {
-    echo -e  "${YELLOW}$@${END}"
+    echo -e  "${YELLOW}$*${END}"
 }
 
 error()
 {
-	echo -e  "${RED}$@${END}"
+	echo -e  "${RED}$*${END}"
     exit 1
 }
 
 SCRIPT_PATH=$(readlink -f "$BASH_SOURCE")
 SCRIPT_NAME=$(basename "$SCRIPT_PATH")
-SCRIPT_DIR="$(cd "$( dirname "$SCRIPT_PATH")" && pwd)"
+# SCRIPT_DIR="$(cd "$( dirname "$SCRIPT_PATH")" && pwd)"
 # CONFIG_PATH=${SCRIPT_DIR%/*}/config.ini
 git config --global core.quotepath false
 # git config --global user.email "edaplayer@163.com"
@@ -34,13 +34,13 @@ git config --global core.quotepath false
 # TOP="$PWD"
 
 ROOT=$PWD/..
-TIME=`date +%Y-%m-%d-%H-%M`
-BRANCH=`git branch | awk '$1=="*"{print $2}'`
+TIME=$(date +%Y-%m-%d-%H-%M)
+BRANCH=$(git branch | awk '$1=="*"{print $2}')
 
 ALIAS=
 # DEST_PATH，目标路径，默认值Patch/分支/commit id，可通过出传参-a指定后缀路径Commit-$ALIAS
-DEST_PATH=$ROOT/Patch/$BRANCH/Commit-$1
-LOG_PATH=$ROOT/Patch/$BRANCH/Commit-$1/Readme.txt
+DEST_PATH="$ROOT/Patch/$BRANCH/Commit-$1"
+LOG_PATH="$ROOT/Patch/$BRANCH/Commit-$1/Readme.txt"
 
 # 以下模式三选一
 DIFF_CURRENT=0 # DIFF_CURRENT=1时，比较当前unstage的文件
@@ -86,12 +86,14 @@ function fetch_list()
 {
     local target_path="$1"
     local target_log="$2"
-    if [ ! -z "$target_log" ]; then
+    if [ -n "$target_log" ]; then
         local separation="========================================================================================"
-        echo $separation >> "$target_log"
-        echo $Patch Time : $TIME >> "$target_log"
-        echo $Git Branch : $BRANCH >> "$target_log"
-        echo -e "Save log message to "$target_log":\n "
+        {
+            echo "$separation"
+            echo "Patch Time : $TIME"
+            echo "Branch : $BRANCH"
+        } >> "$target_log"
+        echo -e "Save log message to $target_log:\n "
         git log -1 | tee -a "$target_log"
         echo
     fi
@@ -129,12 +131,12 @@ function fetch_list()
         fi
 
         # 保存文件列表到readme.txt，如Mod: code.c
-        if [ ! -z "$target_log" ]; then
+        if [ -n "$target_log" ]; then
             echo "$TAG: $FILE" >> "$target_log"
         fi
 
         # 检查是否需要创建父目录
-        dir=`dirname "$FILE"`
+        dir=$(dirname "$FILE")
         [ -d "$dir" ] && mkdir -p "$target_path"/"$dir"
 
         # 目标是文件，直接copy 文件
@@ -161,13 +163,15 @@ function fetch_list_show()
     local commit_id="$1"
     local target_path="$2"
     local target_log="$3"
-    if [ ! -z "$target_log" ]; then
+    if [ -n "$target_log" ]; then
         local separation="================================================================================"
-        echo $separation >> "$target_log"
-        echo $Patch Time : $TIME >> "$target_log"
-        echo $Git Branch : $BRANCH >> "$target_log"
+        {
+            echo "$separation"
+            echo "Patch Time : $TIME"
+            echo "Branch : $BRANCH"
+        } >> "$target_log"
         echo -e "Save log message to $target_log:\n "
-        git log ${commit_id} -1 | tee -a "$target_log"
+        git log "${commit_id}" -1 | tee -a "$target_log"
         echo
     fi
 
@@ -205,16 +209,16 @@ function fetch_list_show()
         fi
 
         # 保存差异列表到readme.txt，如Mod: code.c
-        if [ ! -z $target_log ]; then
+        if [ -n "$target_log" ]; then
             echo "$TAG: $FILE" >> "$target_log"
         fi
 
         # 创建父目录
-        dir=`dirname "$FILE"`
+        dir=$(dirname "$FILE")
         [ -d "$target_path"/"$dir" ] || mkdir -p "$target_path"/"$dir"
 
         # git show得到的一定是文件路径，直接copy 文件
-        git show ${commit_id}:"$FILE" 1>"${target_path}"/"$FILE" || rm "${target_path}"/"$FILE"
+        git show "${commit_id}":"$FILE" 1>"${target_path}"/"$FILE" || rm "${target_path}"/"$FILE"
     done
 }
 
@@ -224,7 +228,7 @@ function fetch_list_show()
 # return none
 function fetch_commit_show()
 {
-    if [ ! -z $2 ];then
+    if [ -n "$2" ];then
         # 有2个参数，指定两个commit节点比较
         AFTER_COMMIT=$2
         BEFORE_COMMIT=$1
@@ -238,26 +242,26 @@ function fetch_commit_show()
     GREEN "BEFORE_COMMIT=$BEFORE_COMMIT\n"
     GREEN "Run fetch_commit_show now."
 
-    mkdir -p $DEST_PATH
-    git diff $BEFORE_COMMIT $AFTER_COMMIT > $DEST_PATH/commit.diff
+    mkdir -p "$DEST_PATH"
+    git diff "$BEFORE_COMMIT" "$AFTER_COMMIT" > "$DEST_PATH"/commit.diff
 
     # 取出目标新节点中有改动的文件
     GREEN "Step1: get after $AFTER_COMMIT files.\n"
-    diff_list=`git diff --name-status $BEFORE_COMMIT $AFTER_COMMIT |\
-            sed -re 's/^\s*(\S+)\s+/\1/' -e 's/^\?\?/A/g'`
+    diff_list=$(git diff --name-status "$BEFORE_COMMIT" "$AFTER_COMMIT" |\
+        sed -re 's/^\s*(\S+)\s+/\1/' -e 's/^\?\?/A/g')
     echo -e "after diff_list=\n$diff_list\n"
-    mkdir -p $DEST_PATH/after
-    fetch_list_show $AFTER_COMMIT "$DEST_PATH"/after $LOG_PATH
+    mkdir -p "$DEST_PATH"/after
+    fetch_list_show "$AFTER_COMMIT" "$DEST_PATH"/after "$LOG_PATH"
 
     # 取出旧节点（before文件）
     GREEN "Step2: get before $BEFORE_COMMIT files.\n"
 
-    diff_list=`git diff --name-status $BEFORE_COMMIT $AFTER_COMMIT |\
-            sed -re 's/^\s*(\S+)\s+/\1/' -e 's/^\?\?/A/g' -e 's/^A.*//'`
+    diff_list=$(git diff --name-status "$BEFORE_COMMIT" "$AFTER_COMMIT" |\
+        sed -re 's/^\s*(\S+)\s+/\1/' -e 's/^\?\?/A/g' -e 's/^A.*//')
     echo -e "before diff_list=\n$diff_list\n"
 
-    mkdir -p $DEST_PATH/before
-    fetch_list_show $BEFORE_COMMIT "$DEST_PATH"/before
+    mkdir -p "$DEST_PATH"/before
+    fetch_list_show "$BEFORE_COMMIT" "$DEST_PATH"/before
     GREEN "fetch_commit_show success."
 }
 
@@ -267,7 +271,7 @@ function fetch_commit_show()
 # return none
 function fetch_commit()
 {
-    if [ ! -z $2 ];then
+    if [ -n "$2" ];then
         # 有2个参数，指定两个commit节点比较
         AFTER_COMMIT=$2
         BEFORE_COMMIT=$1
@@ -288,28 +292,28 @@ function fetch_commit()
     fi
 
     # 取出目标新节点中有改动的文件
-    diff_list=`git diff --name-status $BEFORE_COMMIT $AFTER_COMMIT |
-            sed -re 's/^\s*(\S+)\s+/\1/' -e 's/^\?\?/A/g'`
+    diff_list=$(git diff --name-status "$BEFORE_COMMIT" "$AFTER_COMMIT" |\
+            sed -re 's/^\s*(\S+)\s+/\1/' -e 's/^\?\?/A/g')
     echo -e "\nafter diff_list=\n$diff_list\n"
-    git checkout $AFTER_COMMIT 1>/dev/null 2>&1
+    git checkout "$AFTER_COMMIT" 1>/dev/null 2>&1
     [ $? == 0 ] && GREEN "Step1: Checkout after $AFTER_COMMIT success." ||
             error "Checkout after id failed. Maybe you should run git stash."
-    mkdir -p $DEST_PATH/after
-    fetch_list "$DEST_PATH"/after $LOG_PATH
+    mkdir -p "$DEST_PATH"/after
+    fetch_list "$DEST_PATH"/after "$LOG_PATH"
 
     # 取出旧节点（before文件）
-    diff_list=`git diff --name-status $BEFORE_COMMIT $AFTER_COMMIT |
-            sed -re 's/^\s*(\S+)\s+/\1/' -e 's/^\?\?/A/g'`
+    diff_list=$(git diff --name-status "$BEFORE_COMMIT" "$AFTER_COMMIT" |\
+            sed -re 's/^\s*(\S+)\s+/\1/' -e 's/^\?\?/A/g')
     echo -e "\nbefore diff_list=\n$diff_list\n"
-    git checkout $BEFORE_COMMIT 1>/dev/null 2>&1
+    git checkout "$BEFORE_COMMIT" 1>/dev/null 2>&1
     [ $? == 0 ] && GREEN "Step2: Checkout before $BEFORE_COMMIT success." ||
             error "Checkout before id failed. Maybe you should run git stash"
-    mkdir -p $DEST_PATH/before
+    mkdir -p "$DEST_PATH"/before
     fetch_list "$DEST_PATH"/before
 
     # 恢复初始状态
     echo
-    git checkout $BRANCH 1>/dev/null 2>&1
+    git checkout "$BRANCH" 1>/dev/null 2>&1
     [ $? == 0 ] && GREEN "Step3: Checkout branch $BRANCH success." ||
             error "Checkout branch $BRANCH failed."
 
@@ -322,22 +326,22 @@ function fetch_commit()
 # return none
 function fetch_current_show()
 {
-    mkdir -p $DEST_PATH
-    git diff > $DEST_PATH/current.diff
+    mkdir -p "$DEST_PATH"
+    git diff > "$DEST_PATH"/current.diff
     # 取出已修改的文件（默认不包含未跟踪的文件）
     # git status相当于git status -unormal，而git status -u相当于git status -uall，子目录文件也会被显示
-    diff_list=`git status -s$UNTRACK | sed -re 's/^\s*(\S+)\s+/\1/' -e 's/^\?\?/A/g'`
+    diff_list=$(git status -s$UNTRACK | sed -re 's/^\s*(\S+)\s+/\1/' -e 's/^\?\?/A/g')
 
     GREEN "Step1: fetch_list\n"
     GREEN "diff_list=\n$diff_list"
-    mkdir -p $DEST_PATH/after
-    fetch_list "$DEST_PATH"/after $LOG_PATH
+    mkdir -p "$DEST_PATH"/after
+    fetch_list "$DEST_PATH"/after "$LOG_PATH"
 
     # 保存现场，取出原始文件（排除未跟踪的文件）
     GREEN "Step2: fetch_list_show\n"
-    diff_list=`git status -suno | sed -re 's/^\s*(\S+)\s+/\1/' -e 's/^\?\?/A/g'`
+    diff_list=$(git status -suno | sed -re 's/^\s*(\S+)\s+/\1/' -e 's/^\?\?/A/g')
     GREEN "diff_list=\n$diff_list"
-    mkdir -p $DEST_PATH/before
+    mkdir -p "$DEST_PATH"/before
     fetch_list_show HEAD "$DEST_PATH"/before
     GREEN "fetch_current_show success."
 }
@@ -348,24 +352,24 @@ function fetch_current_show()
 # return none
 function fetch_current()
 {
-    mkdir -p $DEST_PATH
-    git diff > $DEST_PATH/current.diff
+    mkdir -p "$DEST_PATH"
+    git diff > "$DEST_PATH"/current.diff
     # 取出已修改的文件（默认不包含未跟踪的文件）
     # git status相当于git status -unormal，而git status -u相当于git status -uall，子目录文件也会被显示
-    diff_list=`git status -s$UNTRACK | sed -re 's/^\s*(\S+)\s+/\1/' -e 's/^\?\?/A/g'`
+    diff_list=$(git status -s$UNTRACK | sed -re 's/^\s*(\S+)\s+/\1/' -e 's/^\?\?/A/g')
 
     GREEN "\nStep1: fetch_list after"
     GREEN "diff_list=\n$diff_list"
-    mkdir -p $DEST_PATH/after
-    fetch_list "$DEST_PATH"/after $LOG_PATH
+    mkdir -p "$DEST_PATH"/after
+    fetch_list "$DEST_PATH"/after "$LOG_PATH"
 
     # 保存现场，取出原始文件（排除未跟踪的文件）
     GREEN "\nStep2: fetch_list before"
-    diff_list=`git status -suno | sed -re 's/^\s*(\S+)\s+/\1/' -e 's/^\?\?/A/g'`
+    diff_list=$(git status -suno | sed -re 's/^\s*(\S+)\s+/\1/' -e 's/^\?\?/A/g')
     echo -e "\ncurrent diff_list=\n$diff_list\n"
     git stash > /dev/null
     git checkout .
-    mkdir -p $DEST_PATH/before
+    mkdir -p "$DEST_PATH"/before
     fetch_list "$DEST_PATH"/before
     git stash pop > /dev/null
 }
@@ -376,20 +380,20 @@ function fetch_current()
 # return none
 function fetch_branch()
 {
-    DEST_PATH="$ROOT/Patch/$BRANCH/Diff-("$BRANCH")_($1)"
-    LOG_PATH="$ROOT/Patch/$BRANCH/Diff-("$BRANCH")_($1)/Readme.txt"
+    DEST_PATH="$ROOT/Patch/$BRANCH/Diff-($BRANCH)_($1)"
+    LOG_PATH="$ROOT/Patch/$BRANCH/Diff-($BRANCH)_($1)/Readme.txt"
 
-    mkdir -p $DEST_PATH/after
+    mkdir -p "$DEST_PATH/after"
     # 比较当前分支和目标分支的差异
-    diff_list=`git diff --name-status $1 | sed -re 's/^\s*(\S+)\s+/\1/' -e 's/^\?\?/A/g'`
-    fetch_list $DEST_PATH/after $LOG_PATH
+    diff_list=$(git diff --name-status "$1" | sed -re 's/^\s*(\S+)\s+/\1/' -e 's/^\?\?/A/g')
+    fetch_list "$DEST_PATH/after" "$LOG_PATH"
     # 切换到目标分支
-    git checkout $1
+    git checkout "$1"
     [ $? == 0 ] && GREEN "Checkout branch $1 success." || error "Checkout branch $1 failed."
 
-    mkdir -p $DEST_PATH/before
-    fetch_list $DEST_PATH/before
-    git checkout $BRANCH
+    mkdir -p "$DEST_PATH/before"
+    fetch_list "$DEST_PATH/before"
+    git checkout "$BRANCH"
 }
 
 function usage()
@@ -435,10 +439,10 @@ function checkout_files()
     if [ $# != 0 ];then
         if [ "$DIFF_COMMIT" = 1 ];then
             echo -e "\nCommit mode"
-            fetch_commit_show $@
+            fetch_commit_show "$@"
         elif [ "$DIFF_BRANCH" = 1 ];then
             echo -e "\nBranch mode"
-            fetch_branch $@
+            fetch_branch "$@"
         fi
     else
         echo -e "\nCurrent mode"
@@ -449,9 +453,9 @@ function checkout_files()
 
 function parse_arg()
 {
-    ARGS=`getopt -o a:cdhtu: -- "$@"`
+    ARGS=$(getopt -o a:cdhtu: -- "$@")
     echo ARGS="$ARGS"
-    eval set -- ${ARGS}
+    eval set -- "${ARGS}"
     while getopts "a:cdhtu:" opt
     do
         case $opt in
@@ -484,45 +488,45 @@ function parse_arg()
         esac
     done
     # echo "Final OPTIND = $OPTIND"
-    shift $(( $OPTIND-1 ))
-    GREEN "After getopts, all args: $@"
+    shift $(( OPTIND-1 ))
+    GREEN "After getopts, all args: $*"
 
     if [ $# != 0 ];then
         # 根据$1对比log和branch，判断是commit模式还是branch模式
-        RETSUT_1=`git log --pretty=format:"%H" | grep $1`
-        RETSUT_2=`git branch |  grep $1`
-        if [ ! -z "$RETSUT_1" -o "$1" == "HEAD" ];then
+        RETSUT_1=$(git log --pretty=format:"%H" | grep "$1")
+        RETSUT_2=$(git branch |  grep "$1")
+        if [ -n "$RETSUT_1" ] || [ "$1" == "HEAD" ];then
             DIFF_COMMIT=1
         fi
 
-        if [ ! -z "$RETSUT_2" ];then
+        if [ -n "$RETSUT_2" ];then
             DIFF_BRANCH=1
         fi
 
-        if [ "$DIFF_COMMIT" = 0 -a "$DIFF_BRANCH" = 0 ];then
+        if [ "$DIFF_COMMIT" = 0 ] && [ "$DIFF_BRANCH" = 0 ];then
             error "No found this commit id or branch!"
         fi
     else
         DIFF_CURRENT=1
     fi
 
-    GREEN ALIAS=$ALIAS
-    GREEN DIFF_COMMIT=$DIFF_COMMIT
-    GREEN DIFF_BRANCH=$DIFF_BRANCH
-    GREEN DIFF_CURRENT=$DIFF_CURRENT
+    GREEN ALIAS="$ALIAS"
+    GREEN DIFF_COMMIT="$DIFF_COMMIT"
+    GREEN DIFF_BRANCH="$DIFF_BRANCH"
+    GREEN DIFF_CURRENT="$DIFF_CURRENT"
 
-    if [ ! -z $ALIAS ];then
-        DEST_PATH=$ROOT/Patch/$BRANCH/Commit-$ALIAS
-    elif [ ! -z $2 ];then
-        DEST_PATH=$ROOT/Patch/$BRANCH/Commit-$1-$2
-    elif [ ! -z $1 ];then
-        DEST_PATH=$ROOT/Patch/$BRANCH/Commit-$1
+    if [ -n "$ALIAS" ];then
+        DEST_PATH="$ROOT/Patch/$BRANCH/Commit-$ALIAS"
+    elif [ -n "$2" ];then
+        DEST_PATH="$ROOT/Patch/$BRANCH/Commit-$1-$2"
+    elif [ -n "$1" ];then
+        DEST_PATH="$ROOT/Patch/$BRANCH/Commit-$1"
     else
-        DEST_PATH=$ROOT/Patch/$BRANCH/Commit-$TIME
+        DEST_PATH="$ROOT/Patch/$BRANCH/Commit-$TIME"
     fi
-    LOG_PATH=$DEST_PATH/Readme.txt
+    LOG_PATH="$DEST_PATH/Readme.txt"
 
-    checkout_files $@
+    checkout_files "$@"
 }
 
 function main()
@@ -530,7 +534,7 @@ function main()
     if [ ! -e .git ];then
         error "fatal: Not a git repository!!!"
     fi
-    parse_arg $@
+    parse_arg "$@"
 }
 
-main $@
+main "$@"
