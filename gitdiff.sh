@@ -453,42 +453,50 @@ function checkout_files()
 
 function parse_arg()
 {
-    ARGS=$(getopt -o a:cdhtu: -- "$@")
+    ARGS=$(getopt -o a:cdhtu: -- "$@") || exit 1
     echo ARGS="$ARGS"
     eval set -- "${ARGS}"
-    while getopts "a:cdhtu:" opt
+    while [ "$1" ];
     do
-        case $opt in
-            a)
-                ALIAS=$OPTARG
+        opt=$1
+        case "$opt" in
+            -a)
+                shift
+                ALIAS=$1
                 ;;
-            b)
+            -b)
                 DIFF_BRANCH=1
                 ;;
-            c)
+            -c)
                 DIFF_CURRENT=1
                 ;;
-            d)
+            -d)
                 DIFF_COMMIT=1
                 ;;
-            t)
+            -t)
                 ALIAS=$TIME
                 ;;
-            u)
-                UNTRACK=u$OPTARG
+            -u)
+                shift
+                UNTRACK=u$1
                 ;;
-            h)
+            -h|--help)
                 usage
                 exit 0
                 ;;
-            \?)
+            --)
+                shift
+                break
+                ;;
+            *)
                 usage
                 error "Error: invaild argument: $opt"
                 ;;
         esac
+        shift
     done
     # echo "Final OPTIND = $OPTIND"
-    shift $(( OPTIND-1 ))
+    # shift $(( OPTIND-1 ))
     GREEN "After getopts, all args: $*"
 
     if [ $# != 0 ];then
