@@ -284,6 +284,9 @@ OPTIONS
            The status mode parameter is used to specify the handling of untracked files. It is optional: it defaults to no.
            Please see git status --help for more details.
 
+       -h, --help
+           See usage.
+
 NOTE
        If no options are specified, default mode is current mode.
 EOF
@@ -310,7 +313,7 @@ function checkout_files()
 
 function parse_arg()
 {
-    if ARGS=$(getopt -o a:cdhtu: -- "$@") ; then
+    if ARGS=$(getopt -o a:cdhtu: -l "help" -- "$@") ; then
         echo ARGS="$ARGS"
         eval set -- "${ARGS}"
     else
