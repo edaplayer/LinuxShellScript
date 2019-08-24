@@ -453,9 +453,14 @@ function checkout_files()
 
 function parse_arg()
 {
-    ARGS=$(getopt -o a:cdhtu: -- "$@") || exit 1
-    echo ARGS="$ARGS"
-    eval set -- "${ARGS}"
+    if ARGS=$(getopt -o a:cdhtu: -- "$@") ; then
+        echo ARGS="$ARGS"
+        eval set -- "${ARGS}"
+    else
+        usage
+        exit 1
+    fi
+
     while [ "$1" ];
     do
         opt=$1
