@@ -100,7 +100,7 @@ function fetch_list()
     do
         [ -z "$f" ] && continue
         TAG=${f:0:1} #第1个字符
-        FILE=${f:1}  #第2个字符到末尾
+        FILE=${f:2}  #第3个字符到末尾
         if [ "$TAG" == "M" ];then
             TAG=$MODIFIED_TAG
             GREEN  "$TAG  $FILE"
@@ -160,7 +160,7 @@ function fetch_list_by_id()
     do
         [ -z "$f" ] && continue
         TAG=${f:0:1} #第1个字符
-        FILE=${f:1}  #第2个字符到末尾
+        FILE=${f:2}  #第3个字符到末尾
         if [ "$TAG" == "M" ];then
             TAG=$MODIFIED_TAG
             GREEN  "$TAG  $FILE"
@@ -215,7 +215,7 @@ function fetch_commit_by_id()
     GREEN "Step1: get after $AFTER_COMMIT files.\n"
     local IFS=$'\n'
     diff_list=($(git diff --name-status "$BEFORE_COMMIT" "$AFTER_COMMIT" |\
-        sed -re 's/^\s*(\S+)\s+/\1/' -e 's/^\?\?/A/g'))
+        sed -re 's/^\s*(\S+)\s+/\1 /' -e 's/^\?\?/A/g'))
     echo -e "after diff_list=\n${diff_list[*]}\n"
     mkdir -p "$DEST_PATH"/after
     LOGS=$(git log "$BEFORE_COMMIT".."$AFTER_COMMIT")
@@ -225,7 +225,7 @@ function fetch_commit_by_id()
     GREEN "\nStep2: get before $BEFORE_COMMIT files.\n"
 
     diff_list=($(git diff --name-status "$BEFORE_COMMIT" "$AFTER_COMMIT" |\
-        sed -re 's/^\s*(\S+)\s+/\1/' -e 's/^\?\?/A/g' -e 's/^A.*//'))
+        sed -re 's/^\s*(\S+)\s+/\1 /' -e 's/^\?\?/A/g' -e 's/^A.*//'))
     echo -e "before diff_list=\n${diff_list[*]}\n"
 
     mkdir -p "$DEST_PATH"/before
@@ -244,7 +244,7 @@ function fetch_current_diff_by_id()
     # 取出已修改的文件（默认不包含未跟踪的文件）
     # git status相当于git status -unormal，而git status -u相当于git status -uall，子目录文件也会被显示
     local IFS=$'\n'
-    diff_list=$(git status -s$UNTRACK | sed -re 's/^\s*(\S+)\s+/\1/' -e 's/^\?\?/A/g')
+    diff_list=$(git status -s$UNTRACK | sed -re 's/^\s*(\S+)\s+/\1 /' -e 's/^\?\?/A/g')
 
     GREEN "Step1: fetch_list\n"
     echo -e "after diff_list=\n$diff_list\n"
@@ -255,7 +255,7 @@ function fetch_current_diff_by_id()
 
     # 保存现场，取出原始文件（排除未跟踪的文件）
     GREEN "\nStep2: fetch_list_by_id\n"
-    diff_list=$(git status -suno | sed -re 's/^\s*(\S+)\s+/\1/' -e 's/^\?\?/A/g')
+    diff_list=$(git status -suno | sed -re 's/^\s*(\S+)\s+/\1 /' -e 's/^\?\?/A/g')
     echo -e "before diff_list=\n$diff_list\n"
     mkdir -p "$DEST_PATH"/before
     fetch_list_by_id HEAD "$DEST_PATH"/before
@@ -276,7 +276,7 @@ function fetch_branch_by_id()
 
     local IFS=$'\n'
     diff_list=($(git diff --name-status "$1" | \
-        sed -re 's/^\s*(\S+)\s+/\1/' -e 's/^\?\?/A/g'))
+        sed -re 's/^\s*(\S+)\s+/\1 /' -e 's/^\?\?/A/g'))
 
     GREEN "Step1: get after $BRANCH files.\n"
     echo -e "after diff_list=\n${diff_list[*]}\n"
@@ -287,7 +287,7 @@ function fetch_branch_by_id()
     # 取出旧节点（before文件）
     GREEN "\nStep2: get before $1 files.\n"
     diff_list=($(git diff --name-status "$1" | \
-        sed -re 's/^\s*(\S+)\s+/\1/' -e 's/^\?\?/A/g' -e 's/^A.*//'))
+        sed -re 's/^\s*(\S+)\s+/\1 /' -e 's/^\?\?/A/g' -e 's/^A.*//'))
 
     echo -e "before diff_list=\n${diff_list[*]}\n"
 
