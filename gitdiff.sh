@@ -92,9 +92,10 @@ function fetch_list()
             echo "$separation"
             echo "Patch Time : $TIME"
             echo "Branch : $BRANCH"
+            echo 
         } >> "$target_log"
         echo -e "Save log message to $target_log:\n "
-        git log -1 | tee -a "$target_log"
+        echo -e "$LOGS\n" | tee -a "$target_log"
         echo
     fi
 
@@ -160,9 +161,10 @@ function fetch_list_by_id()
             echo "$separation"
             echo "Patch Time : $TIME"
             echo "Branch : $BRANCH"
+            echo
         } >> "$target_log"
         echo -e "Save log message to $target_log:\n "
-        git log "${commit_id}" -1 | tee -a "$target_log"
+        echo -e "$LOGS\n" | tee -a "$target_log"
         echo
     fi
 
@@ -233,6 +235,7 @@ function fetch_commit_by_id()
         sed -re 's/^\s*(\S+)\s+/\1/' -e 's/^\?\?/A/g'))
     echo -e "after diff_list=\n${diff_list[*]}\n"
     mkdir -p "$DEST_PATH"/after
+    LOGS=$(git log "$BEFORE_COMMIT".."$AFTER_COMMIT")
     fetch_list_by_id "$AFTER_COMMIT" "$DEST_PATH"/after "$LOG_PATH"
 
     # 取出旧节点（before文件）
@@ -281,6 +284,7 @@ function fetch_commit()
     [ $? == 0 ] && GREEN "Step1: Checkout after $AFTER_COMMIT success." ||
             error "Checkout after id failed. Maybe you should run git stash."
     mkdir -p "$DEST_PATH"/after
+    LOGS=$(git log "$BEFORE_COMMIT".."$AFTER_COMMIT")
     fetch_list "$DEST_PATH"/after "$LOG_PATH"
 
     # 取出旧节点（before文件）
@@ -318,6 +322,8 @@ function fetch_current_diff_by_id()
     GREEN "Step1: fetch_list\n"
     echo -e "after diff_list=\n$diff_list\n"
     mkdir -p "$DEST_PATH"/after
+
+    LOGS=$(git log -1)
     fetch_list "$DEST_PATH"/after "$LOG_PATH"
 
     # 保存现场，取出原始文件（排除未跟踪的文件）
@@ -346,6 +352,7 @@ function fetch_current()
     GREEN "\nStep1: fetch_list after"
     echo -e  "diff_list=\n${diff_list[*]}"
     mkdir -p "$DEST_PATH"/after
+    LOGS=$(git log -1)
     fetch_list "$DEST_PATH"/after "$LOG_PATH"
 
     # 保存现场，取出原始文件（排除未跟踪的文件）
@@ -378,6 +385,7 @@ function fetch_branch_by_id()
     GREEN "Step1: get after $BRANCH files.\n"
     echo -e "after diff_list=\n${diff_list[*]}\n"
     mkdir -p "$DEST_PATH"/after
+    LOGS=$(git log -1)
     fetch_list "$AFTER_COMMIT" "$DEST_PATH"/after "$LOG_PATH"
 
     # 取出旧节点（before文件）
@@ -405,6 +413,7 @@ function fetch_branch()
     # 比较当前分支和目标分支的差异
     local IFS=$'\n'
     diff_list=($(git diff --name-status "$1" | sed -re 's/^\s*(\S+)\s+/\1/' -e 's/^\?\?/A/g'))
+    LOGS=$(git log -1)
     fetch_list "$DEST_PATH/after" "$LOG_PATH"
     # 切换到目标分支
     git checkout "$1"
