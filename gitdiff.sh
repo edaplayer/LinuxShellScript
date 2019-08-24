@@ -76,7 +76,6 @@ function save_log()
         echo -e "Save log message to $target_log:\n "
         echo -e "$LOGS\n" | tee -a "$target_log"
         echo "${diff_list[*]}" >> "$target_log"
-        echo
     fi
 }
 
@@ -136,14 +135,18 @@ function fetch_list()
 # ----------------------------------------------------------------------------#
 function fetch_list_by_id()
 {
-    local commit_id="$1"
-    local target_path="$2"
+    if [ $# == 1 ]; then
+        local target_path="$1"
+    else
+        local commit_id="$1"
+        local target_path="$2"
+    fi
 
     local f
     local FILE
     local dir
 
-    GREEN "fetch_list_by_id"
+    GREEN "fetch_list_by_id:"
     for f in ${diff_list[@]}
     do
         [ -z "$f" ] && continue
@@ -166,8 +169,22 @@ function fetch_list_by_id()
         dir=$(dirname "$FILE")
         [ -d "$target_path"/"$dir" ] || mkdir -p "$target_path"/"$dir"
 
-        # git show得到的一定是文件路径，直接copy 文件
-        git show "${commit_id}":"$FILE" 1>"${target_path}"/"$FILE" || rm "${target_path}"/"$FILE"
+        # 如果未指定id，直接拷贝当前文件
+        if [ $# == 1 ];then
+            # 目标是文件，直接copy 文件
+            if [ -f  "$FILE" ]; then
+                cp -rfa "$FILE" "$target_path"/"$FILE"
+            elif [ -d  "$FILE" ]; then
+                # 如果目标是目录(这种情况只有fetch_current模式才会出现)，拷贝到目标父目录
+                cp  -rfa "$FILE" "$target_path"/"$dir"
+            else
+                RED "Error: $FILE couldn't be found."
+            fi
+        # 已指定id，则使用git show重定向方式拷贝文件
+        else
+            # git show得到的一定是文件路径，直接copy 文件
+            git show "${commit_id}":"$FILE" 1>"${target_path}"/"$FILE" || rm "${target_path}"/"$FILE"
+        fi
     done
 }
 
@@ -236,7 +253,7 @@ function fetch_current_diff_by_id()
 
     LOGS=$(git log -1)
     save_log "$LOGS" "$LOG_PATH"
-    fetch_list "$DEST_PATH"/after
+    fetch_list_by_id "$DEST_PATH"/after
 
     # 保存现场，取出原始文件（排除未跟踪的文件）
     GREEN "\nStep2: fetch_list_by_id\n"
@@ -268,7 +285,7 @@ function fetch_branch_by_id()
     mkdir -p "$DEST_PATH"/after
     LOGS=$(git log -1)
     save_log "$LOGS" "$LOG_PATH"
-    fetch_list "$AFTER_COMMIT" "$DEST_PATH"/after
+    fetch_list_by_id "$DEST_PATH"/after
 
     # 取出旧节点（before文件）
     GREEN "\nStep2: get before $1 files.\n"
