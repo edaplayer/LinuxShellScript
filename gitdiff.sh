@@ -56,27 +56,6 @@ MODIFIED_TAG="Mod:"
 DELETED_TAG="Del:"
 ADDED_TAG="Add:"
 
-function git_stash()
-{
-    while true; do
-        read -p "Run git stash? Please enter y or n: " answer
-        case $answer in
-            [yY]*)
-                git stash | grep Saved
-                [ $? == 0  ] && GIT_STASH=1
-                break;
-                ;;
-            [nN]*)
-                GIT_STASH=0
-                break;
-                ;;
-            *)
-                echo -e "\nDude, just enter Y or N, please."
-                ;;
-        esac
-    done
-}
-
 # --------------------------------------------------------------------------#
 # @brief fetch_list ，copy diff_list 列表中的所有文件到$1路径(通过git checkout方式)
 # param1 目标路径
@@ -250,62 +229,6 @@ function fetch_commit_by_id()
     GREEN "\nfetch_commit_by_id success."
 }
 
-# func fetch_commit
-# param1 commit-old
-# param2 commit-new
-# return none
-function fetch_commit()
-{
-    if [ -n "$2" ];then
-        # 有2个参数，指定两个commit节点比较
-        AFTER_COMMIT=$2
-        BEFORE_COMMIT=$1
-    else
-        # 1个参数，只对该节点前后比较
-        AFTER_COMMIT=$1
-        BEFORE_COMMIT=$1^
-    fi
-
-    GREEN "AFTER_COMMIT=$AFTER_COMMIT"
-    GREEN "BEFORE_COMMIT=$BEFORE_COMMIT\n"
-
-    echo "Current mode is diff commit mode, git stash may need to be executed."
-    git_stash
-
-    if [ $# == 0 ]; then
-        error "Error: missing commit id."
-    fi
-    local IFS=$'\n'
-    # 取出目标新节点中有改动的文件
-    diff_list=($(git diff --name-status "$BEFORE_COMMIT" "$AFTER_COMMIT" |\
-            sed -re 's/^\s*(\S+)\s+/\1/' -e 's/^\?\?/A/g'))
-    echo -e "\nafter diff_list=\n${diff_list[*]}\n"
-    git checkout "$AFTER_COMMIT" 1>/dev/null 2>&1
-    [ $? == 0 ] && GREEN "Step1: Checkout after $AFTER_COMMIT success." ||
-            error "Checkout after id failed. Maybe you should run git stash."
-    mkdir -p "$DEST_PATH"/after
-    LOGS=$(git log "$BEFORE_COMMIT".."$AFTER_COMMIT")
-    fetch_list "$DEST_PATH"/after "$LOG_PATH"
-
-    # 取出旧节点（before文件）
-    diff_list=($(git diff --name-status "$BEFORE_COMMIT" "$AFTER_COMMIT" |\
-            sed -re 's/^\s*(\S+)\s+/\1/' -e 's/^\?\?/A/g'))
-    echo -e "\nbefore diff_list=\n${diff_list[*]}\n"
-    git checkout "$BEFORE_COMMIT" 1>/dev/null 2>&1
-    [ $? == 0 ] && GREEN "Step2: Checkout before $BEFORE_COMMIT success." ||
-            error "Checkout before id failed. Maybe you should run git stash"
-    mkdir -p "$DEST_PATH"/before
-    fetch_list "$DEST_PATH"/before
-
-    # 恢复初始状态
-    echo
-    git checkout "$BRANCH" 1>/dev/null 2>&1
-    [ $? == 0 ] && GREEN "Step3: Checkout branch $BRANCH success." ||
-            error "Checkout branch $BRANCH failed."
-
-    [ $GIT_STASH == 1 ] && git stash pop > /dev/null
-}
-
 # func fetch_current_diff_by_id
 #  取出当前状态差异文件
 # param none
@@ -333,37 +256,6 @@ function fetch_current_diff_by_id()
     mkdir -p "$DEST_PATH"/before
     fetch_list_by_id HEAD "$DEST_PATH"/before
     GREEN "\nfetch_current_diff_by_id success."
-}
-
-# func fetch_current
-#  取出当前状态差异文件
-# param none
-# return none
-function fetch_current()
-{
-    mkdir -p "$DEST_PATH"
-    git diff > "$DEST_PATH"/current.diff
-    # 取出已修改的文件（默认不包含未跟踪的文件）
-    # git status相当于git status -unormal，而git status -u相当于git status -uall，子目录文件也会被显示
-
-    local IFS=$'\n'
-    diff_list=($(git status -s$UNTRACK | sed -re 's/^\s*(\S+)\s+/\1/' -e 's/^\?\?/A/g'))
-
-    GREEN "\nStep1: fetch_list after"
-    echo -e  "diff_list=\n${diff_list[*]}"
-    mkdir -p "$DEST_PATH"/after
-    LOGS=$(git log -1)
-    fetch_list "$DEST_PATH"/after "$LOG_PATH"
-
-    # 保存现场，取出原始文件（排除未跟踪的文件）
-    GREEN "\nStep2: fetch_list before"
-    diff_list=($(git status -suno | sed -re 's/^\s*(\S+)\s+/\1/' -e 's/^\?\?/A/g'))
-    echo -e  "\ncurrent diff_list=\n${diff_list[*]}\n"
-    git stash > /dev/null
-    git checkout .
-    mkdir -p "$DEST_PATH"/before
-    fetch_list "$DEST_PATH"/before
-    git stash pop > /dev/null
 }
 
 # func fetch_branch_by_id
@@ -398,30 +290,6 @@ function fetch_branch_by_id()
     mkdir -p "$DEST_PATH"/before
     fetch_list_by_id "$1" "$DEST_PATH"/before
     GREEN "\nfetch_branch_by_id success."
-}
-
-# func fetch_branch
-#      提取当前分支与目标branch的差异
-# param1 branch
-# return none
-function fetch_branch()
-{
-    DEST_PATH="$ROOT/Patch/$BRANCH/Diff-($BRANCH)_($1)"
-    LOG_PATH="$ROOT/Patch/$BRANCH/Diff-($BRANCH)_($1)/Readme.txt"
-
-    mkdir -p "$DEST_PATH/after"
-    # 比较当前分支和目标分支的差异
-    local IFS=$'\n'
-    diff_list=($(git diff --name-status "$1" | sed -re 's/^\s*(\S+)\s+/\1/' -e 's/^\?\?/A/g'))
-    LOGS=$(git log -1)
-    fetch_list "$DEST_PATH/after" "$LOG_PATH"
-    # 切换到目标分支
-    git checkout "$1"
-    [ $? == 0 ] && GREEN "Checkout branch $1 success." || error "Checkout branch $1 failed."
-
-    mkdir -p "$DEST_PATH/before"
-    fetch_list "$DEST_PATH/before"
-    git checkout "$BRANCH"
 }
 
 function usage()
