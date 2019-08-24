@@ -152,13 +152,13 @@ function fetch_list()
 }
 
 # --------------------------------------------------------------------------#
-# @function fetch_list_show
+# @function fetch_list_by_id
 # @brief copy差异列表中的所有文件到目标路径(通过git show方式)
 # param1 commmit id
 # param2 目标路径
 # param3 log路径
 # ----------------------------------------------------------------------------#
-function fetch_list_show()
+function fetch_list_by_id()
 {
     local commit_id="$1"
     local target_path="$2"
@@ -179,7 +179,7 @@ function fetch_list_show()
     local FILE
     local dir
     local file_list
-    GREEN "fetch_list_show"
+    GREEN "fetch_list_by_id"
     GREEN "diff_list=$diff_list"
     echo "$diff_list" > tmp.tmp
     local n=0
@@ -222,11 +222,11 @@ function fetch_list_show()
     done
 }
 
-# func fetch_commit_show
+# func fetch_commit_by_id
 # param1 commit-old
 # param2 commit-new
 # return none
-function fetch_commit_show()
+function fetch_commit_by_id()
 {
     if [ -n "$2" ];then
         # 有2个参数，指定两个commit节点比较
@@ -240,7 +240,7 @@ function fetch_commit_show()
 
     GREEN "AFTER_COMMIT=$AFTER_COMMIT"
     GREEN "BEFORE_COMMIT=$BEFORE_COMMIT\n"
-    GREEN "Run fetch_commit_show now."
+    GREEN "Run fetch_commit_by_id now."
 
     mkdir -p "$DEST_PATH"
     git diff "$BEFORE_COMMIT" "$AFTER_COMMIT" > "$DEST_PATH"/commit.diff
@@ -251,7 +251,7 @@ function fetch_commit_show()
         sed -re 's/^\s*(\S+)\s+/\1/' -e 's/^\?\?/A/g')
     echo -e "after diff_list=\n$diff_list\n"
     mkdir -p "$DEST_PATH"/after
-    fetch_list_show "$AFTER_COMMIT" "$DEST_PATH"/after "$LOG_PATH"
+    fetch_list_by_id "$AFTER_COMMIT" "$DEST_PATH"/after "$LOG_PATH"
 
     # 取出旧节点（before文件）
     GREEN "Step2: get before $BEFORE_COMMIT files.\n"
@@ -261,8 +261,8 @@ function fetch_commit_show()
     echo -e "before diff_list=\n$diff_list\n"
 
     mkdir -p "$DEST_PATH"/before
-    fetch_list_show "$BEFORE_COMMIT" "$DEST_PATH"/before
-    GREEN "fetch_commit_show success."
+    fetch_list_by_id "$BEFORE_COMMIT" "$DEST_PATH"/before
+    GREEN "fetch_commit_by_id success."
 }
 
 # func fetch_commit
@@ -320,11 +320,11 @@ function fetch_commit()
     [ $GIT_STASH == 1 ] && git stash pop > /dev/null
 }
 
-# func fetch_current_show
+# func fetch_current_diff_by_id
 #  取出当前状态差异文件
 # param none
 # return none
-function fetch_current_show()
+function fetch_current_diff_by_id()
 {
     mkdir -p "$DEST_PATH"
     git diff > "$DEST_PATH"/current.diff
@@ -338,12 +338,12 @@ function fetch_current_show()
     fetch_list "$DEST_PATH"/after "$LOG_PATH"
 
     # 保存现场，取出原始文件（排除未跟踪的文件）
-    GREEN "Step2: fetch_list_show\n"
+    GREEN "Step2: fetch_list_by_id\n"
     diff_list=$(git status -suno | sed -re 's/^\s*(\S+)\s+/\1/' -e 's/^\?\?/A/g')
     GREEN "diff_list=\n$diff_list"
     mkdir -p "$DEST_PATH"/before
-    fetch_list_show HEAD "$DEST_PATH"/before
-    GREEN "fetch_current_show success."
+    fetch_list_by_id HEAD "$DEST_PATH"/before
+    GREEN "fetch_current_diff_by_id success."
 }
 
 # func fetch_current
@@ -439,14 +439,14 @@ function checkout_files()
     if [ $# != 0 ];then
         if [ "$DIFF_COMMIT" = 1 ];then
             echo -e "\nCommit mode"
-            fetch_commit_show "$@"
+            fetch_commit_by_id "$@"
         elif [ "$DIFF_BRANCH" = 1 ];then
             echo -e "\nBranch mode"
             fetch_branch "$@"
         fi
     else
         echo -e "\nCurrent mode"
-        fetch_current_show
+        fetch_current_diff_by_id
     fi
     GREEN "\n###### Generate diff files success. ######"
 }
