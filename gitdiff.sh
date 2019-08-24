@@ -524,13 +524,11 @@ function parse_arg()
 
     if [ $# != 0 ];then
         # 根据$1对比log和branch，判断是commit模式还是branch模式
-        RETSUT_1=$(git log --pretty=format:"%H" | grep "$1")
-        RETSUT_2=$(git branch |  grep "$1")
-        if [ -n "$RETSUT_1" ] || [ "$1" == "HEAD" ];then
+        TARGET_COMMIT=$(git log --all --pretty=format:"%H" | grep "$1")
+        TARGET_BRANCH=$(git branch | grep "$1")
+        if [ -n "$TARGET_COMMIT" ] || [ "$1" == "HEAD" ];then
             DIFF_COMMIT=1
-        fi
-
-        if [ -n "$RETSUT_2" ];then
+        elif [ -n "$TARGET_BRANCH" ];then
             DIFF_BRANCH=1
         fi
 
