@@ -66,7 +66,7 @@ function save_log()
     if [ -n "$1" ] && [ -n "$2" ]; then
         local LOGS="$1"
         local target_log="$2"
-        local separation="========================================================================================"
+        local separation="================================================================================"
         {
             echo "$separation"
             echo "Patch Time : $TIME"
@@ -75,6 +75,7 @@ function save_log()
         } >> "$target_log"
         echo -e "Save log message to $target_log:\n "
         echo -e "$LOGS\n" | tee -a "$target_log"
+        echo "${diff_list[*]}" >> "$target_log"
         echo
     fi
 }
@@ -87,10 +88,6 @@ function save_log()
 function fetch_list()
 {
     local target_path="$1"
-    local target_log="$2"
-    if [ -n "$target_log" ]; then
-        save_log "$LOGS" "$target_log"
-    fi
     local f
     local FILE
     local dir
@@ -112,11 +109,6 @@ function fetch_list()
             YELLOW "$TAG  $FILE"
         else
             error "Error: invaild TAG $TAG"
-        fi
-
-        # 保存文件列表到readme.txt，如Mod: code.c
-        if [ -n "$target_log" ]; then
-            echo "$TAG: $FILE" >> "$target_log"
         fi
 
         # 检查是否需要创建父目录
@@ -146,10 +138,6 @@ function fetch_list_by_id()
 {
     local commit_id="$1"
     local target_path="$2"
-    local target_log="$3"
-    if [ -n "$target_log" ]; then
-        save_log "$LOGS" "$target_log"
-    fi
 
     local f
     local FILE
@@ -172,11 +160,6 @@ function fetch_list_by_id()
             YELLOW "$TAG  $FILE"
         else
             error "Error: invaild TAG $TAG"
-        fi
-
-        # 保存差异列表到readme.txt，如Mod: code.c
-        if [ -n "$target_log" ]; then
-            echo "$TAG: $FILE" >> "$target_log"
         fi
 
         # 创建父目录
@@ -219,7 +202,8 @@ function fetch_commit_by_id()
     echo -e "after diff_list=\n${diff_list[*]}\n"
     mkdir -p "$DEST_PATH"/after
     LOGS=$(git log "$BEFORE_COMMIT".."$AFTER_COMMIT")
-    fetch_list_by_id "$AFTER_COMMIT" "$DEST_PATH"/after "$LOG_PATH"
+    save_log "$LOGS" "$LOG_PATH"
+    fetch_list_by_id "$AFTER_COMMIT" "$DEST_PATH"/after
 
     # 取出旧节点（before文件）
     GREEN "\nStep2: get before $BEFORE_COMMIT files.\n"
@@ -251,7 +235,8 @@ function fetch_current_diff_by_id()
     mkdir -p "$DEST_PATH"/after
 
     LOGS=$(git log -1)
-    fetch_list "$DEST_PATH"/after "$LOG_PATH"
+    save_log "$LOGS" "$LOG_PATH"
+    fetch_list "$DEST_PATH"/after
 
     # 保存现场，取出原始文件（排除未跟踪的文件）
     GREEN "\nStep2: fetch_list_by_id\n"
@@ -282,7 +267,8 @@ function fetch_branch_by_id()
     echo -e "after diff_list=\n${diff_list[*]}\n"
     mkdir -p "$DEST_PATH"/after
     LOGS=$(git log -1)
-    fetch_list "$AFTER_COMMIT" "$DEST_PATH"/after "$LOG_PATH"
+    save_log "$LOGS" "$LOG_PATH"
+    fetch_list "$AFTER_COMMIT" "$DEST_PATH"/after
 
     # 取出旧节点（before文件）
     GREEN "\nStep2: get before $1 files.\n"
