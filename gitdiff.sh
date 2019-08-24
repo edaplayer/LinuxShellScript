@@ -89,18 +89,8 @@ function fetch_list()
     local target_path="$1"
     local target_log="$2"
     if [ -n "$target_log" ]; then
-        local separation="========================================================================================"
-        {
-            echo "$separation"
-            echo "Patch Time : $TIME"
-            echo "Branch : $BRANCH"
-            echo 
-        } >> "$target_log"
-        echo -e "Save log message to $target_log:\n "
-        echo -e "$LOGS\n" | tee -a "$target_log"
-        echo
+        save_log "$LOGS" "$target_log"
     fi
-
     local f
     local FILE
     local dir
@@ -158,16 +148,7 @@ function fetch_list_by_id()
     local target_path="$2"
     local target_log="$3"
     if [ -n "$target_log" ]; then
-        local separation="================================================================================"
-        {
-            echo "$separation"
-            echo "Patch Time : $TIME"
-            echo "Branch : $BRANCH"
-            echo
-        } >> "$target_log"
-        echo -e "Save log message to $target_log:\n "
-        echo -e "$LOGS\n" | tee -a "$target_log"
-        echo
+        save_log "$LOGS" "$target_log"
     fi
 
     local f
