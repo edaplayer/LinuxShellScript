@@ -167,14 +167,14 @@ function fetch_commit_by_id()
     git diff "$BEFORE_COMMIT" "$AFTER_COMMIT" > "$DEST_PATH"/commit.diff
 
     # 取出目标新节点中有改动的文件
-    GREEN "Step1: get commit $AFTER_COMMIT files.\n"
     local IFS=$'\n'
     diff_list=($(git diff --name-status "$BEFORE_COMMIT" "$AFTER_COMMIT" |\
         sed -re 's/^\s*(\S+)\s+/\1 /' -e 's/^\?\?/A/g'))
-    echo -e "after diff_list=\n${diff_list[*]}\n"
     mkdir -p "$DEST_PATH"/after
     LOGS=$(git log "$BEFORE_COMMIT".."$AFTER_COMMIT")
     save_log "$LOGS" "$LOG_PATH"
+    GREEN "Step1: get commit $AFTER_COMMIT files.\n"
+    echo -e "after diff_list=\n${diff_list[*]}\n"
     fetch_list_by_id "$AFTER_COMMIT" "$DEST_PATH"/after
 
     # 取出旧节点（before文件）
@@ -202,12 +202,12 @@ function fetch_current_diff_by_id()
     local IFS=$'\n'
     diff_list=$(git status -s$UNTRACK | sed -re 's/^\s*(\S+)\s+/\1 /' -e 's/^\?\?/A/g')
 
-    GREEN "Step1: get current files.\n"
-    echo -e "after diff_list=\n$diff_list\n"
     mkdir -p "$DEST_PATH"/after
-
     LOGS=$(git log -1)
     save_log "$LOGS" "$LOG_PATH"
+
+    GREEN "Step1: get current files.\n"
+    echo -e "after diff_list=\n$diff_list\n"
     fetch_list_by_id "$DEST_PATH"/after
 
     # 保存现场，取出原始文件（排除未跟踪的文件）
@@ -234,12 +234,11 @@ function fetch_branch_by_id()
     local IFS=$'\n'
     diff_list=($(git diff --name-status "$1" | \
         sed -re 's/^\s*(\S+)\s+/\1 /' -e 's/^\?\?/A/g'))
-
-    GREEN "Step1: get current $BRANCH files.\n"
-    echo -e "after diff_list=\n${diff_list[*]}\n"
     mkdir -p "$DEST_PATH"/after
     LOGS=$(git log -1)
     save_log "$LOGS" "$LOG_PATH"
+    GREEN "Step1: get current $BRANCH files.\n"
+    echo -e "after diff_list=\n${diff_list[*]}\n"
     fetch_list_by_id "$DEST_PATH"/after
 
     # 取出旧节点（before文件）
