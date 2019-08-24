@@ -358,6 +358,39 @@ function fetch_current()
     git stash pop > /dev/null
 }
 
+# func fetch_branch_by_id
+#      提取当前分支与目标branch的差异
+# param1 branch
+# return none
+function fetch_branch_by_id()
+{
+    DEST_PATH="$ROOT/Patch/$BRANCH/Diff-($BRANCH)_($1)"
+    LOG_PATH="$ROOT/Patch/$BRANCH/Diff-($BRANCH)_($1)/Readme.txt"
+
+    mkdir -p "$DEST_PATH"
+    git diff "$1" > "$DEST_PATH"/branch.diff
+
+    local IFS=$'\n'
+    diff_list=($(git diff --name-status "$1" | \
+        sed -re 's/^\s*(\S+)\s+/\1/' -e 's/^\?\?/A/g'))
+
+    GREEN "Step1: get after $BRANCH files.\n"
+    echo -e "after diff_list=\n${diff_list[*]}\n"
+    mkdir -p "$DEST_PATH"/after
+    fetch_list "$AFTER_COMMIT" "$DEST_PATH"/after "$LOG_PATH"
+
+    # 取出旧节点（before文件）
+    GREEN "\nStep2: get before $1 files.\n"
+    diff_list=($(git diff --name-status "$1" | \
+        sed -re 's/^\s*(\S+)\s+/\1/' -e 's/^\?\?/A/g' -e 's/^A.*//'))
+
+    echo -e "before diff_list=\n${diff_list[*]}\n"
+
+    mkdir -p "$DEST_PATH"/before
+    fetch_list_by_id "$1" "$DEST_PATH"/before
+    GREEN "fetch_branch_by_id success."
+}
+
 # func fetch_branch
 #      提取当前分支与目标branch的差异
 # param1 branch
@@ -427,7 +460,7 @@ function checkout_files()
             fetch_commit_by_id "$@"
         elif [ "$DIFF_BRANCH" = 1 ];then
             echo -e "\nBranch mode"
-            fetch_branch "$@"
+            fetch_branch_by_id "$@"
         fi
     else
         echo -e "\nCurrent mode"
