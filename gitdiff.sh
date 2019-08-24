@@ -57,6 +57,29 @@ DELETED_TAG="Del"
 ADDED_TAG="Add"
 
 # --------------------------------------------------------------------------#
+# @brief save_log，保存log到$2路径
+# param1 log内容
+# param2 log路径
+# ----------------------------------------------------------------------------#
+function save_log()
+{
+    if [ -n "$1" ] && [ -n "$2" ]; then
+        local LOGS="$1"
+        local target_log="$2"
+        local separation="========================================================================================"
+        {
+            echo "$separation"
+            echo "Patch Time : $TIME"
+            echo "Branch : $BRANCH"
+            echo
+        } >> "$target_log"
+        echo -e "Save log message to $target_log:\n "
+        echo -e "$LOGS\n" | tee -a "$target_log"
+        echo
+    fi
+}
+
+# --------------------------------------------------------------------------#
 # @brief fetch_list ，copy diff_list 列表中的所有文件到$1路径(通过git checkout方式)
 # param1 目标路径
 # param2 log路径
