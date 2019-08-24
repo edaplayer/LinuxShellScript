@@ -52,9 +52,9 @@ UNTRACK=uno
 # UNTRACK=unormal
 # UNTRACK=uall
 
-MODIFIED_TAG="Mod:"
-DELETED_TAG="Del:"
-ADDED_TAG="Add:"
+MODIFIED_TAG="Mod"
+DELETED_TAG="Del"
+ADDED_TAG="Add"
 
 # --------------------------------------------------------------------------#
 # @brief fetch_list ，copy diff_list 列表中的所有文件到$1路径(通过git checkout方式)
