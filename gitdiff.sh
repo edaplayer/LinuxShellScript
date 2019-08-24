@@ -63,7 +63,7 @@ ADDED_TAG="Add"
 # ----------------------------------------------------------------------------#
 function save_log()
 {
-    if [ -n "$1" ] && [ -n "$2" ]; then
+    if [ $# = 2 ]; then
         local LOGS="$1"
         local target_log="$2"
         local separation="================================================================================"
@@ -71,59 +71,14 @@ function save_log()
             echo "$separation"
             echo "Patch Time : $TIME"
             echo "Branch : $BRANCH"
-            echo
+            echo "$separation"
         } >> "$target_log"
+        echo "$separation"
         echo -e "Save log message to $target_log:\n "
         echo -e "$LOGS\n" | tee -a "$target_log"
         echo "${diff_list[*]}" >> "$target_log"
+        echo "$separation"
     fi
-}
-
-# --------------------------------------------------------------------------#
-# @brief fetch_list ，copy diff_list 列表中的所有文件到$1路径(通过git checkout方式)
-# param1 目标路径
-# param2 log路径
-# ----------------------------------------------------------------------------#
-function fetch_list()
-{
-    local target_path="$1"
-    local f
-    local FILE
-    local dir
-
-    GREEN "fetch_list:"
-    for f in ${diff_list[@]}
-    do
-        [ -z "$f" ] && continue
-        TAG=${f:0:1} #第1个字符
-        FILE=${f:2}  #第3个字符到末尾
-        if [ "$TAG" == "M" ];then
-            TAG=$MODIFIED_TAG
-            GREEN  "$TAG  $FILE"
-        elif [ "$TAG" == "D" ];then
-            TAG=$DELETED_TAG
-            RED "$TAG  $FILE"
-        elif [ "$TAG" == "A" ];then
-            TAG=$ADDED_TAG
-            YELLOW "$TAG  $FILE"
-        else
-            error "Error: invaild TAG $TAG"
-        fi
-
-        # 检查是否需要创建父目录
-        dir=$(dirname "$FILE")
-        [ -d "$dir" ] && mkdir -p "$target_path"/"$dir"
-
-        # 目标是文件，直接copy 文件
-        if [ -f  "$FILE" ]; then
-            cp -rfa "$FILE" "$target_path"/"$FILE"
-        elif [ -d  "$FILE" ]; then
-            # 如果目标是目录(这种情况只有fetch_current模式才会出现)，拷贝到目标父目录
-            cp  -rfa "$FILE" "$target_path"/"$dir"
-        else
-            RED "Error: $FILE couldn't be found."
-        fi
-    done
 }
 
 # --------------------------------------------------------------------------#
@@ -212,7 +167,7 @@ function fetch_commit_by_id()
     git diff "$BEFORE_COMMIT" "$AFTER_COMMIT" > "$DEST_PATH"/commit.diff
 
     # 取出目标新节点中有改动的文件
-    GREEN "Step1: get after $AFTER_COMMIT files.\n"
+    GREEN "Step1: get commit $AFTER_COMMIT files.\n"
     local IFS=$'\n'
     diff_list=($(git diff --name-status "$BEFORE_COMMIT" "$AFTER_COMMIT" |\
         sed -re 's/^\s*(\S+)\s+/\1 /' -e 's/^\?\?/A/g'))
@@ -223,7 +178,7 @@ function fetch_commit_by_id()
     fetch_list_by_id "$AFTER_COMMIT" "$DEST_PATH"/after
 
     # 取出旧节点（before文件）
-    GREEN "\nStep2: get before $BEFORE_COMMIT files.\n"
+    GREEN "\nStep2: get commit $BEFORE_COMMIT files.\n"
 
     diff_list=($(git diff --name-status "$BEFORE_COMMIT" "$AFTER_COMMIT" |\
         sed -re 's/^\s*(\S+)\s+/\1 /' -e 's/^\?\?/A/g' -e 's/^A.*//'))
@@ -247,7 +202,7 @@ function fetch_current_diff_by_id()
     local IFS=$'\n'
     diff_list=$(git status -s$UNTRACK | sed -re 's/^\s*(\S+)\s+/\1 /' -e 's/^\?\?/A/g')
 
-    GREEN "Step1: fetch_list\n"
+    GREEN "Step1: get current files.\n"
     echo -e "after diff_list=\n$diff_list\n"
     mkdir -p "$DEST_PATH"/after
 
@@ -256,7 +211,7 @@ function fetch_current_diff_by_id()
     fetch_list_by_id "$DEST_PATH"/after
 
     # 保存现场，取出原始文件（排除未跟踪的文件）
-    GREEN "\nStep2: fetch_list_by_id\n"
+    GREEN "\nStep2: get original files\n"
     diff_list=$(git status -suno | sed -re 's/^\s*(\S+)\s+/\1 /' -e 's/^\?\?/A/g')
     echo -e "before diff_list=\n$diff_list\n"
     mkdir -p "$DEST_PATH"/before
@@ -280,7 +235,7 @@ function fetch_branch_by_id()
     diff_list=($(git diff --name-status "$1" | \
         sed -re 's/^\s*(\S+)\s+/\1 /' -e 's/^\?\?/A/g'))
 
-    GREEN "Step1: get after $BRANCH files.\n"
+    GREEN "Step1: get current $BRANCH files.\n"
     echo -e "after diff_list=\n${diff_list[*]}\n"
     mkdir -p "$DEST_PATH"/after
     LOGS=$(git log -1)
@@ -288,7 +243,7 @@ function fetch_branch_by_id()
     fetch_list_by_id "$DEST_PATH"/after
 
     # 取出旧节点（before文件）
-    GREEN "\nStep2: get before $1 files.\n"
+    GREEN "\nStep2: get branch $1 files.\n"
     diff_list=($(git diff --name-status "$1" | \
         sed -re 's/^\s*(\S+)\s+/\1 /' -e 's/^\?\?/A/g' -e 's/^A.*//'))
 
