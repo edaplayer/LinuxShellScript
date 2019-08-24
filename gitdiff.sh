@@ -102,6 +102,7 @@ function fetch_list()
     local FILE
     local dir
 
+    GREEN "fetch_list:"
     for f in ${diff_list[@]}
     do
         [ -z "$f" ] && continue
@@ -243,7 +244,7 @@ function fetch_commit_by_id()
 
     mkdir -p "$DEST_PATH"/before
     fetch_list_by_id "$BEFORE_COMMIT" "$DEST_PATH"/before
-    GREEN "fetch_commit_by_id success."
+    GREEN "\nfetch_commit_by_id success."
 }
 
 # func fetch_commit
@@ -325,7 +326,7 @@ function fetch_current_diff_by_id()
     echo -e "before diff_list=\n$diff_list\n"
     mkdir -p "$DEST_PATH"/before
     fetch_list_by_id HEAD "$DEST_PATH"/before
-    GREEN "fetch_current_diff_by_id success."
+    GREEN "\nfetch_current_diff_by_id success."
 }
 
 # func fetch_current
@@ -388,7 +389,7 @@ function fetch_branch_by_id()
 
     mkdir -p "$DEST_PATH"/before
     fetch_list_by_id "$1" "$DEST_PATH"/before
-    GREEN "fetch_branch_by_id success."
+    GREEN "\nfetch_branch_by_id success."
 }
 
 # func fetch_branch
@@ -453,20 +454,20 @@ EOF
 function checkout_files()
 {
     echo
-    GREEN "Checking the code, please wait..."
+    GREEN "Checking the code, please wait...\n"
     if [ $# != 0 ];then
         if [ "$DIFF_COMMIT" = 1 ];then
-            echo -e "\nCommit mode"
+            echo -e "Diff mode: compare commit code\n"
             fetch_commit_by_id "$@"
         elif [ "$DIFF_BRANCH" = 1 ];then
-            echo -e "\nBranch mode"
+            echo -e "Diff mode: compare branch code\n"
             fetch_branch_by_id "$@"
         fi
     else
-        echo -e "\nCurrent mode"
+        echo -e "Diff mode: compare current code\n"
         fetch_current_diff_by_id
     fi
-    GREEN "\n###### Generate diff files success. ######"
+    GREEN "\n###### Generate diff files success. ######\n"
 }
 
 function parse_arg()
@@ -518,9 +519,8 @@ function parse_arg()
         esac
         shift
     done
-    # echo "Final OPTIND = $OPTIND"
-    # shift $(( OPTIND-1 ))
-    GREEN "After getopts, all args: $*"
+
+    GREEN "After getopt, all args is: $*"
 
     if [ $# != 0 ];then
         # 根据$1对比log和branch，判断是commit模式还是branch模式
@@ -535,7 +535,7 @@ function parse_arg()
         fi
 
         if [ "$DIFF_COMMIT" = 0 ] && [ "$DIFF_BRANCH" = 0 ];then
-            error "No found this commit id or branch!"
+            error "No such commit id or branch!"
         fi
     else
         DIFF_CURRENT=1
