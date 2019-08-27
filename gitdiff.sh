@@ -1,4 +1,10 @@
 #!/bin/bash
+#########################################################################
+# File Name: gitdiff.sh
+# Author: Edward.Tang
+# mail:   @163.com
+# Created Time: Fri 11 Jan 2019 20:03:39 PM CST
+#########################################################################
 RED='\e[1;31m'
 GREEN='\e[1;32m'
 YELLOW='\e[1;33m'
@@ -38,9 +44,9 @@ TIME=$(date +%Y-%m-%d-%H-%M)
 BRANCH=$(git branch | awk '$1=="*"{print $2}')
 
 ALIAS=
-# DEST_PATH，目标路径，默认值Patch/分支/commit id，可通过出传参-a指定后缀路径Commit-$ALIAS
-DEST_PATH="$ROOT/Patch/$BRANCH/Commit-$1"
-LOG_PATH="$ROOT/Patch/$BRANCH/Commit-$1/Readme.txt"
+# TARGET_PATH，目标路径，默认值Patch/分支/commit id，可通过出传参-a指定后缀Commit-$ALIAS
+TARGET_PATH="$ROOT/Patch/$BRANCH/Commit-$1"
+LOG_PATH="$ROOT/Patch/$BRANCH/Commit-$1/readme.txt"
 
 # 以下模式三选一
 DIFF_CURRENT=0 # DIFF_CURRENT=1时，比较当前unstage的文件
@@ -48,9 +54,9 @@ DIFF_COMMIT=0 #按commit id比较，通过传参$1确定
 DIFF_BRANCH=0 #按branch比较，通过传参$1确定
 
 # 是否比较未跟踪文件，默认不比较未跟踪文件
-UNTRACK=uno
-# UNTRACK=unormal
-# UNTRACK=uall
+UNTRACK=no
+# UNTRACK=normal
+# UNTRACK=all
 
 MODIFIED_TAG="Mod"
 DELETED_TAG="Del"
@@ -86,7 +92,8 @@ function save_log()
 # @brief copy差异列表中的所有文件到目标路径(通过git show方式)
 # param1 commmit id
 # param2 目标路径
-# param3 log路径
+# or
+# param1 目标路径
 # ----------------------------------------------------------------------------#
 function fetch_list_by_id()
 {
@@ -98,6 +105,7 @@ function fetch_list_by_id()
     fi
 
     local f
+    local TAG
     local FILE
     local dir
 
@@ -135,9 +143,8 @@ function fetch_list_by_id()
             else
                 RED "Error: $FILE couldn't be found."
             fi
-        # 已指定id，则使用git show重定向方式拷贝文件
+        # 指定id，则使用git show重定向方式拷贝文件
         else
-            # git show得到的一定是文件路径，直接copy 文件
             git show "${commit_id}":"$FILE" 1>"${target_path}"/"$FILE" || rm "${target_path}"/"$FILE"
         fi
     done
@@ -163,19 +170,19 @@ function fetch_commit_by_id()
     GREEN "BEFORE_COMMIT=$BEFORE_COMMIT\n"
     GREEN "Run fetch_commit_by_id now."
 
-    mkdir -p "$DEST_PATH"
-    git diff "$BEFORE_COMMIT" "$AFTER_COMMIT" > "$DEST_PATH"/commit.diff
+    mkdir -p "$TARGET_PATH"
+    git diff "$BEFORE_COMMIT" "$AFTER_COMMIT" > "$TARGET_PATH"/commit.diff
 
     # 取出目标新节点中有改动的文件
     local IFS=$'\n'
     diff_list=($(git diff --name-status "$BEFORE_COMMIT" "$AFTER_COMMIT" |\
         sed -re 's/^\s*(\S+)\s+/\1 /' -e 's/^\?\?/A/g'))
-    mkdir -p "$DEST_PATH"/after
+    mkdir -p "$TARGET_PATH"/after
     LOGS=$(git log "$BEFORE_COMMIT".."$AFTER_COMMIT")
     save_log "$LOGS" "$LOG_PATH"
     GREEN "Step1: get commit $AFTER_COMMIT files.\n"
     echo -e "after diff_list=\n${diff_list[*]}\n"
-    fetch_list_by_id "$AFTER_COMMIT" "$DEST_PATH"/after
+    fetch_list_by_id "$AFTER_COMMIT" "$TARGET_PATH"/after
 
     # 取出旧节点（before文件）
     GREEN "\nStep2: get commit $BEFORE_COMMIT files.\n"
@@ -184,8 +191,8 @@ function fetch_commit_by_id()
         sed -re 's/^\s*(\S+)\s+/\1 /' -e 's/^\?\?/A/g' -e 's/^A.*//'))
     echo -e "before diff_list=\n${diff_list[*]}\n"
 
-    mkdir -p "$DEST_PATH"/before
-    fetch_list_by_id "$BEFORE_COMMIT" "$DEST_PATH"/before
+    mkdir -p "$TARGET_PATH"/before
+    fetch_list_by_id "$BEFORE_COMMIT" "$TARGET_PATH"/before
     GREEN "\nfetch_commit_by_id success."
 }
 
@@ -195,27 +202,27 @@ function fetch_commit_by_id()
 # return none
 function fetch_current_diff_by_id()
 {
-    mkdir -p "$DEST_PATH"
-    git diff > "$DEST_PATH"/current.diff
+    mkdir -p "$TARGET_PATH"
+    git diff > "$TARGET_PATH"/current.diff
     # 取出已修改的文件（默认不包含未跟踪的文件）
     # git status相当于git status -unormal，而git status -u相当于git status -uall，子目录文件也会被显示
     local IFS=$'\n'
-    diff_list=$(git status -s$UNTRACK | sed -re 's/^\s*(\S+)\s+/\1 /' -e 's/^\?\?/A/g')
+    diff_list=$(git status -su$UNTRACK | sed -re 's/^\s*(\S+)\s+/\1 /' -e 's/^\?\?/A/g')
 
-    mkdir -p "$DEST_PATH"/after
+    mkdir -p "$TARGET_PATH"/after
     LOGS=$(git log -1)
     save_log "$LOGS" "$LOG_PATH"
 
     GREEN "Step1: get current files.\n"
     echo -e "after diff_list=\n$diff_list\n"
-    fetch_list_by_id "$DEST_PATH"/after
+    fetch_list_by_id "$TARGET_PATH"/after
 
     # 保存现场，取出原始文件（排除未跟踪的文件）
     GREEN "\nStep2: get original files\n"
     diff_list=$(git status -suno | sed -re 's/^\s*(\S+)\s+/\1 /' -e 's/^\?\?/A/g')
     echo -e "before diff_list=\n$diff_list\n"
-    mkdir -p "$DEST_PATH"/before
-    fetch_list_by_id HEAD "$DEST_PATH"/before
+    mkdir -p "$TARGET_PATH"/before
+    fetch_list_by_id HEAD "$TARGET_PATH"/before
     GREEN "\nfetch_current_diff_by_id success."
 }
 
@@ -225,21 +232,21 @@ function fetch_current_diff_by_id()
 # return none
 function fetch_branch_by_id()
 {
-    DEST_PATH="$ROOT/Patch/$BRANCH/Diff-($BRANCH)_($1)"
-    LOG_PATH="$ROOT/Patch/$BRANCH/Diff-($BRANCH)_($1)/Readme.txt"
+    TARGET_PATH="$ROOT/Patch/$BRANCH/Diff-($BRANCH)_($1)"
+    LOG_PATH="$ROOT/Patch/$BRANCH/Diff-($BRANCH)_($1)/readme.txt"
 
-    mkdir -p "$DEST_PATH"
-    git diff "$1" > "$DEST_PATH"/branch.diff
+    mkdir -p "$TARGET_PATH"
+    git diff "$1" > "$TARGET_PATH"/branch.diff
 
     local IFS=$'\n'
     diff_list=($(git diff --name-status "$1" | \
         sed -re 's/^\s*(\S+)\s+/\1 /' -e 's/^\?\?/A/g'))
-    mkdir -p "$DEST_PATH"/after
+    mkdir -p "$TARGET_PATH"/after
     LOGS=$(git log -1)
     save_log "$LOGS" "$LOG_PATH"
     GREEN "Step1: get current $BRANCH files.\n"
     echo -e "after diff_list=\n${diff_list[*]}\n"
-    fetch_list_by_id "$DEST_PATH"/after
+    fetch_list_by_id "$TARGET_PATH"/after
 
     # 取出旧节点（before文件）
     GREEN "\nStep2: get branch $1 files.\n"
@@ -248,8 +255,8 @@ function fetch_branch_by_id()
 
     echo -e "before diff_list=\n${diff_list[*]}\n"
 
-    mkdir -p "$DEST_PATH"/before
-    fetch_list_by_id "$1" "$DEST_PATH"/before
+    mkdir -p "$TARGET_PATH"/before
+    fetch_list_by_id "$1" "$TARGET_PATH"/before
     GREEN "\nfetch_branch_by_id success."
 }
 
@@ -292,7 +299,7 @@ NOTE
 EOF
 }
 
-function checkout_files()
+function do_start()
 {
     echo
     GREEN "Checking the code, please wait...\n"
@@ -343,7 +350,7 @@ function parse_arg()
                 ;;
             -u)
                 shift
-                UNTRACK=u$1
+                UNTRACK=$1
                 ;;
             -h|--help)
                 usage
@@ -386,17 +393,17 @@ function parse_arg()
     GREEN DIFF_CURRENT="$DIFF_CURRENT"
 
     if [ -n "$ALIAS" ];then
-        DEST_PATH="$ROOT/Patch/$BRANCH/Commit-$ALIAS"
+        TARGET_PATH="$ROOT/Patch/$BRANCH/Commit-$ALIAS"
     elif [ -n "$2" ];then
-        DEST_PATH="$ROOT/Patch/$BRANCH/Commit-$1-$2"
+        TARGET_PATH="$ROOT/Patch/$BRANCH/Commit-$1-$2"
     elif [ -n "$1" ];then
-        DEST_PATH="$ROOT/Patch/$BRANCH/Commit-$1"
+        TARGET_PATH="$ROOT/Patch/$BRANCH/Commit-$1"
     else
-        DEST_PATH="$ROOT/Patch/$BRANCH/Commit-$TIME"
+        TARGET_PATH="$ROOT/Patch/$BRANCH/Commit-$TIME"
     fi
-    LOG_PATH="$DEST_PATH/Readme.txt"
+    LOG_PATH="$TARGET_PATH/readme.txt"
 
-    checkout_files "$@"
+    do_start "$@"
 }
 
 function main()
