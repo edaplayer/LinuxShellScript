@@ -62,6 +62,7 @@ MODIFIED_TAG="Mod"
 DELETED_TAG="Del"
 ADDED_TAG="Add"
 
+separation="================================================================================"
 # --------------------------------------------------------------------------#
 # @brief save_log，保存log到$2路径
 # param1 log内容
@@ -72,7 +73,6 @@ function save_log()
     if [ $# = 2 ]; then
         local LOGS="$1"
         local target_log="$2"
-        local separation="================================================================================"
         {
             echo "$separation"
             echo "Patch Time : $TIME"
@@ -148,6 +148,7 @@ function fetch_list_by_id()
             git show "${commit_id}":"$FILE" 1>"${target_path}"/"$FILE" || rm "${target_path}"/"$FILE"
         fi
     done
+    echo "$separation"
 }
 
 # func fetch_commit_by_id
@@ -181,19 +182,19 @@ function fetch_commit_by_id()
     LOGS=$(git log "$BEFORE_COMMIT".."$AFTER_COMMIT")
     save_log "$LOGS" "$LOG_PATH"
     GREEN "Step1: get commit $AFTER_COMMIT files.\n"
-    echo -e "after diff_list=\n${diff_list[*]}\n"
+    echo -e "last diff_list=\n${diff_list[*]}\n"
     fetch_list_by_id "$AFTER_COMMIT" "$TARGET_PATH"/after
 
     # 取出旧节点（before文件）
-    GREEN "\nStep2: get commit $BEFORE_COMMIT files.\n"
+    GREEN "Step2: get commit $BEFORE_COMMIT files.\n"
 
     diff_list=($(git diff --name-status "$BEFORE_COMMIT" "$AFTER_COMMIT" |\
         sed -re 's/^\s*(\S+)\s+/\1 /' -e 's/^\?\?/A/g' -e 's/^A.*//'))
-    echo -e "before diff_list=\n${diff_list[*]}\n"
+    echo -e "previous diff_list=\n${diff_list[*]}\n"
 
     mkdir -p "$TARGET_PATH"/before
     fetch_list_by_id "$BEFORE_COMMIT" "$TARGET_PATH"/before
-    GREEN "\nfetch_commit_by_id success."
+    GREEN "fetch_commit_by_id success."
 }
 
 # func fetch_current_diff_by_id
@@ -214,16 +215,16 @@ function fetch_current_diff_by_id()
     save_log "$LOGS" "$LOG_PATH"
 
     GREEN "Step1: get current files.\n"
-    echo -e "after diff_list=\n$diff_list\n"
+    echo -e "current diff_list=\n$diff_list\n"
     fetch_list_by_id "$TARGET_PATH"/after
 
     # 保存现场，取出原始文件（排除未跟踪的文件）
-    GREEN "\nStep2: get original files\n"
+    GREEN "Step2: get original files\n"
     diff_list=$(git status -suno | sed -re 's/^\s*(\S+)\s+/\1 /' -e 's/^\?\?/A/g')
-    echo -e "before diff_list=\n$diff_list\n"
+    echo -e "previous diff_list=\n$diff_list\n"
     mkdir -p "$TARGET_PATH"/before
     fetch_list_by_id HEAD "$TARGET_PATH"/before
-    GREEN "\nfetch_current_diff_by_id success."
+    GREEN "fetch_current_diff_by_id success."
 }
 
 # func fetch_branch_by_id
@@ -245,19 +246,19 @@ function fetch_branch_by_id()
     LOGS=$(git log -1)
     save_log "$LOGS" "$LOG_PATH"
     GREEN "Step1: get current $BRANCH files.\n"
-    echo -e "after diff_list=\n${diff_list[*]}\n"
+    echo -e "current branch diff_list=\n${diff_list[*]}\n"
     fetch_list_by_id "$TARGET_PATH"/after
 
     # 取出旧节点（before文件）
-    GREEN "\nStep2: get branch $1 files.\n"
+    GREEN "Step2: get branch $1 files.\n"
     diff_list=($(git diff --name-status "$1" | \
         sed -re 's/^\s*(\S+)\s+/\1 /' -e 's/^\?\?/A/g' -e 's/^A.*//'))
 
-    echo -e "before diff_list=\n${diff_list[*]}\n"
+    echo -e "branch $1 diff_list=\n${diff_list[*]}\n"
 
     mkdir -p "$TARGET_PATH"/before
     fetch_list_by_id "$1" "$TARGET_PATH"/before
-    GREEN "\nfetch_branch_by_id success."
+    GREEN "fetch_branch_by_id success."
 }
 
 function usage()
