@@ -20,6 +20,12 @@ GREEN()
 	echo -e  "${GREEN}$*${END}"
 }
 
+error()
+{
+	echo -e  "${RED}$*${END}"
+    exit 1
+}
+
 get_args()
 {
     HEAD=
@@ -29,55 +35,48 @@ get_args()
 
     if [[ $# = 0 ]]; then
         usage
-        exit
+        exit 1
     fi
 
-    # echo argv = $*
-    # echo arvc = $#
-    # RED all args: $@
-    getopt -Q t::i::h "$@"
-    if [ $? -ne 0 ]; then
-        RED error: getopt failed.
+    if ARGS=`getopt -o t:i:h -l help -- $@`;then
+        echo ARGS="$ARGS"
+        eval set -- "${ARGS}"
+    else
+        RED please confirm the filename without space.
         usage
         exit 1
     fi
-    ARGS=`getopt t:i:h "$@"`
-    eval set -- ${ARGS}
-    # echo =================================
-    # echo after getopt
-    # echo argv = $@
-    # echo arvc = $#
-    # echo =================================
-    while getopts "t:i:h" opt
+    while [ "$1" ];
     do
+        opt=$1
         case $opt in
-            t)
-                TYPE=$OPTARG
-                GREEN TYPE=$TYPE
+            -t)
+                shift
+                TYPE=$1
                 ;;
-            i)
-                IC=$OPTARG
-                GREEN IC=$IC
+            -i)
+                shift
+                IC=$1
                 ;;
-            h)
+            -h|--help)
                 usage
                 exit 0
                 ;;
-            \?)
-                RED "Error: invaild argument."
-                usage
-                exit 1
+            --)
+                shift
+                break
+                ;;
+            *)
+                error "Error: invaild argument."
                 ;;
         esac
     done
-    # echo "Final OPTIND = $OPTIND"
-    shift $(( $OPTIND-1 ))
     GREEN all parameters: $@
 
     if [ -e "$1" ]; then
         inputfile="$1"
     else
-        RED inputfile "$1" is not exist.
+        RED inputfile "$1" is not exist, please confirm the filename without space.
         usage
         exit 1
     fi
@@ -85,9 +84,6 @@ get_args()
     if [ -n "$2" ]; then
         outfile=$2
     fi
-
-    GREEN "inputfile: $inputfile"
-    GREEN "outfile:   $outfile"
 
     if [ -z "$IC" ]; then
         read HEAD <"$inputfile"
@@ -104,24 +100,10 @@ get_args()
         fi
     fi
 
+    GREEN "inputfile: $inputfile"
+    GREEN "outfile:   $outfile"
     GREEN "IC:  $IC"
-
-    # for argv in $@
-    # do
-        # case $argv in
-            # -t*)
-                # TYPE=${argv#-t}
-                # echo TYPE=$TYPE
-            # ;;
-            # -i*)
-                # IC=${argv#-i}
-                # echo IC=$IC
-            # ;;
-            # -h|--help)
-                # usage
-            # ;;
-        # esac
-    # done
+    GREEN "TYPE=$TYPE"
 }
 
 conv_jd_type1()
@@ -265,19 +247,25 @@ usage()
     Convert lcd init code of vendor to mtk lcm code. Default output file is lcd.c
 
 SYNOPSIS
-${script} <inputfile> [outputfile] [OPTION]
+${script} [OPTION] <inputfile> [outputfile]
 
 Example: ${script} input.txt
         or
         ${script} input.txt -t1 -i jd
 
 OPTIONS
-    -t      type: 1 or 2, default value is 2
-            1 for dsi_set_cmdq function
-            2 for push_table function
-    -i      IC Model: jd or nt, default value is jd
-            jd for JD936xx ic
-            nt for NT355xx ic
+    -t
+        type: 1 or 2, default value is 2
+        1 for dsi_set_cmdq function
+        2 for push_table function
+
+    -i
+        IC Model: jd or nt, default value is jd
+        jd for JD936xx ic
+        nt for NT355xx ic
+
+    -h
+        See usage.
 EOF
 }
 
@@ -301,8 +289,10 @@ main()
     echo
     echo ==========================================================================
     GREEN HEAD=$HEAD
-    GREEN TYPE=$TYPE
-    GREEN IC=$IC
+    GREEN "inputfile: $inputfile"
+    GREEN "outfile:   $outfile"
+    GREEN "IC:  $IC"
+    GREEN "TYPE=$TYPE"
     GREEN Convert completed successfully.
     echo ==========================================================================
 }
