@@ -33,7 +33,7 @@ error()
 SCRIPT_PATH=$(readlink -f "$BASH_SOURCE")
 SCRIPT_NAME=$(basename "$SCRIPT_PATH")
 # SCRIPT_DIR="$(cd "$( dirname "$SCRIPT_PATH")" && pwd)"
-# CONFIG_PATH=${SCRIPT_DIR%/*}/config.ini
+# CONFIG_PATH=${SCRIPT_DIR}/config.ini
 git config --global core.quotepath false
 # git config --global user.email "edaplayer@163.com"
 # git config --global user.name "Edward.Tang"
@@ -46,7 +46,7 @@ BRANCH=$(git branch | awk '$1=="*"{print $2}')
 ALIAS=
 # TARGET_PATH，目标路径，默认值Patch/分支/commit id，可通过出传参-a指定后缀Commit-$ALIAS
 TARGET_PATH="$ROOT/Patch/$BRANCH/Commit-$1"
-LOG_PATH="$ROOT/Patch/$BRANCH/Commit-$1/readme.txt"
+LOG_PATH="$TARGET_PATH/readme.txt"
 
 # 以下模式三选一
 DIFF_CURRENT=0 # DIFF_CURRENT=1时，比较当前unstage的文件
@@ -57,11 +57,6 @@ DIFF_BRANCH=0 #按branch比较，通过传参$1确定
 UNTRACK=no
 # UNTRACK=normal
 # UNTRACK=all
-
-MODIFIED_TAG="Mod"
-DELETED_TAG="Del"
-ADDED_TAG="Add"
-
 separation="================================================================================"
 # --------------------------------------------------------------------------#
 # @brief save_log，保存log到$2路径
@@ -116,36 +111,33 @@ function fetch_list_by_id()
         TAG=${f:0:1} #第1个字符
         FILE=${f:2}  #第3个字符到末尾
         if [ "$TAG" == "M" ];then
-            TAG=$MODIFIED_TAG
-            GREEN  "$TAG  $FILE"
+            GREEN  "$TAG    $FILE"
         elif [ "$TAG" == "D" ];then
-            TAG=$DELETED_TAG
-            RED "$TAG  $FILE"
+            RED "$TAG   $FILE"
         elif [ "$TAG" == "A" ];then
-            TAG=$ADDED_TAG
-            YELLOW "$TAG  $FILE"
+            YELLOW "$TAG    $FILE"
         else
             error "Error: invaild TAG $TAG"
         fi
 
         # 创建父目录
         dir=$(dirname "$FILE")
-        [ -d "$target_path"/"$dir" ] || mkdir -p "$target_path"/"$dir"
+        [ -d "$target_path/$dir" ] || mkdir -p "$target_path/$dir"
 
         # 如果未指定id，直接拷贝当前文件
         if [ $# == 1 ];then
             # 目标是文件，直接copy 文件
             if [ -f  "$FILE" ]; then
-                cp -rfa "$FILE" "$target_path"/"$FILE"
+                cp -rfa "$FILE" "$target_path/$FILE"
             elif [ -d  "$FILE" ]; then
                 # 如果目标是目录(这种情况只有fetch_current模式才会出现)，拷贝到目标父目录
-                cp  -rfa "$FILE" "$target_path"/"$dir"
+                cp  -rfa "$FILE" "$target_path/$dir"
             else
                 RED "Error: $FILE couldn't be found."
             fi
         # 指定id，则使用git show重定向方式拷贝文件
         else
-            git show "${commit_id}":"$FILE" 1>"${target_path}"/"$FILE" || rm "${target_path}"/"$FILE"
+            git show "${commit_id}":"$FILE" 1>"${target_path}/$FILE" || rm "${target_path}/$FILE"
         fi
     done
     echo "$separation"
