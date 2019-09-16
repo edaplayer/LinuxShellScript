@@ -143,11 +143,11 @@ function copy_files()
     echo "$separation"
 }
 
-# func fetch_commit_by_id
+# func fetch_commit_diff_by_id
 # param1 commit-old
 # param2 commit-new
 # return none
-function fetch_commit_by_id()
+function fetch_commit_diff_by_id()
 {
     if [ -n "$2" ];then
         # 有2个参数，指定两个commit节点比较
@@ -161,7 +161,7 @@ function fetch_commit_by_id()
 
     GREEN "AFTER_COMMIT=$AFTER_COMMIT"
     GREEN "BEFORE_COMMIT=$BEFORE_COMMIT\n"
-    GREEN "Run fetch_commit_by_id now."
+    GREEN "Run fetch_commit_diff_by_id now."
 
     mkdir -p "$TARGET_PATH"
     [ $GENERATE_DIFF = 1 ] && git diff --binary "$BEFORE_COMMIT" "$AFTER_COMMIT" > "$TARGET_PATH/commit.diff"
@@ -186,7 +186,7 @@ function fetch_commit_by_id()
 
     mkdir -p "$TARGET_PATH"/before
     copy_files "$BEFORE_COMMIT" "$TARGET_PATH"/before
-    GREEN "fetch_commit_by_id success."
+    GREEN "fetch_commit_diff_by_id success."
 }
 
 # func fetch_current_diff_by_id
@@ -219,11 +219,11 @@ function fetch_current_diff_by_id()
     GREEN "fetch_current_diff_by_id success."
 }
 
-# func fetch_branch_by_id
+# func fetch_branch_diff_by_id
 #      提取当前分支与目标branch的差异
 # param1 branch
 # return none
-function fetch_branch_by_id()
+function fetch_branch_diff_by_id()
 {
     TARGET_PATH="$ROOT/Patch/$BRANCH/Diff-($BRANCH)_($1)"
     LOG_PATH="$ROOT/Patch/$BRANCH/Diff-($BRANCH)_($1)/readme.txt"
@@ -250,7 +250,7 @@ function fetch_branch_by_id()
 
     mkdir -p "$TARGET_PATH"/before
     copy_files "$1" "$TARGET_PATH"/before
-    GREEN "fetch_branch_by_id success."
+    GREEN "fetch_branch_diff_by_id success."
 }
 
 function usage()
@@ -302,10 +302,10 @@ function do_start()
     if [ $# != 0 ];then
         if [ "$DIFF_COMMIT" = 1 ];then
             echo -e "Diff mode: compare commit code\n"
-            fetch_commit_by_id "$@"
+            fetch_commit_diff_by_id "$@"
         elif [ "$DIFF_BRANCH" = 1 ];then
             echo -e "Diff mode: compare branch code\n"
-            fetch_branch_by_id "$@"
+            fetch_branch_diff_by_id "$@"
         fi
     else
         echo -e "Diff mode: compare current code\n"
