@@ -83,14 +83,14 @@ function save_log()
 }
 
 # --------------------------------------------------------------------------#
-# @function fetch_list_by_id
+# @function copy_files
 # @brief copy差异列表中的所有文件到目标路径(通过git show方式)
 # param1 commmit id
 # param2 目标路径
 # or
 # param1 目标路径
 # ----------------------------------------------------------------------------#
-function fetch_list_by_id()
+function copy_files()
 {
     if [ $# == 1 ]; then
         local target_path="$1"
@@ -104,7 +104,7 @@ function fetch_list_by_id()
     local FILE
     local dir
 
-    GREEN "fetch_list_by_id:"
+    GREEN "copy_files:"
     for f in ${diff_list[@]}
     do
         [ -z "$f" ] && continue
@@ -175,7 +175,7 @@ function fetch_commit_by_id()
     save_log "$LOGS" "$LOG_PATH"
     GREEN "Step1: get commit $AFTER_COMMIT files.\n"
     echo -e "last diff_list=\n${diff_list[*]}\n"
-    fetch_list_by_id "$AFTER_COMMIT" "$TARGET_PATH"/after
+    copy_files "$AFTER_COMMIT" "$TARGET_PATH"/after
 
     # 取出旧节点（before文件）
     GREEN "Step2: get commit $BEFORE_COMMIT files.\n"
@@ -185,7 +185,7 @@ function fetch_commit_by_id()
     echo -e "previous diff_list=\n${diff_list[*]}\n"
 
     mkdir -p "$TARGET_PATH"/before
-    fetch_list_by_id "$BEFORE_COMMIT" "$TARGET_PATH"/before
+    copy_files "$BEFORE_COMMIT" "$TARGET_PATH"/before
     GREEN "fetch_commit_by_id success."
 }
 
@@ -208,14 +208,14 @@ function fetch_current_diff_by_id()
 
     GREEN "Step1: get current files.\n"
     echo -e "current diff_list=\n$diff_list\n"
-    fetch_list_by_id "$TARGET_PATH"/after
+    copy_files "$TARGET_PATH"/after
 
     # 保存现场，取出原始文件（排除未跟踪的文件）
     GREEN "Step2: get original files\n"
     diff_list=$(git status -suno | sed -re 's/^\s*(\S+)\s+/\1 /' -e 's/^\?\?/A/g')
     echo -e "previous diff_list=\n$diff_list\n"
     mkdir -p "$TARGET_PATH"/before
-    fetch_list_by_id HEAD "$TARGET_PATH"/before
+    copy_files HEAD "$TARGET_PATH"/before
     GREEN "fetch_current_diff_by_id success."
 }
 
@@ -239,7 +239,7 @@ function fetch_branch_by_id()
     save_log "$LOGS" "$LOG_PATH"
     GREEN "Step1: get current $BRANCH files.\n"
     echo -e "current branch diff_list=\n${diff_list[*]}\n"
-    fetch_list_by_id "$TARGET_PATH"/after
+    copy_files "$TARGET_PATH"/after
 
     # 取出旧节点（before文件）
     GREEN "Step2: get branch $1 files.\n"
@@ -249,7 +249,7 @@ function fetch_branch_by_id()
     echo -e "branch $1 diff_list=\n${diff_list[*]}\n"
 
     mkdir -p "$TARGET_PATH"/before
-    fetch_list_by_id "$1" "$TARGET_PATH"/before
+    copy_files "$1" "$TARGET_PATH"/before
     GREEN "fetch_branch_by_id success."
 }
 
