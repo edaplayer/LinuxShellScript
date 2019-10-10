@@ -210,6 +210,18 @@ conv_nt_type2()
     }' < "${inputfile}"
 }
 
+conv_hx_type1()
+{
+    awk '
+    {
+        gsub(/0x/, "");
+        cmd = $1
+        data = $2
+        printf("    data_array[0] = 0x%s%s1500;\n", data, cmd);
+        printf("    dsi_set_cmdq(data_array, 1, 1);\n");
+    }' < "${inputfile}"
+}
+
 process_jd()
 {
     case $TYPE in
@@ -242,6 +254,19 @@ process_nt()
     esac
 }
 
+process_hx()
+{
+    case $TYPE in
+        1)
+        conv_hx_type1
+        ;;
+        *)
+        RED IC $IC type $TYPE is not supported.
+        exit 1
+        ;;
+    esac
+}
+
 usage()
 {
 	cat <<EOF
@@ -262,8 +287,9 @@ OPTIONS
 
     -i
         IC Model: jd or nt, default value is jd
-        jd for JD936xx ic
-        nt for NT355xx ic
+        jd for JD936xx ic(Fitipower)
+        nt for NT355xx ic(novatek)
+        hx for HX82xx ic(himax)
 
     -h
         See usage.
@@ -281,6 +307,9 @@ main()
         ;;
         nt)
         process_nt | tee "$outfile"
+        ;;
+        hx)
+        process_hx | tee "$outfile"
         ;;
         *)
         RED Error: IC $IC is not supported.
