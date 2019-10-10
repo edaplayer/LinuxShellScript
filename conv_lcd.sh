@@ -222,6 +222,16 @@ conv_hx_type1()
     }' < "${inputfile}"
 }
 
+conv_ota_type2()
+{
+    sed -n -r '
+    s/^\s*\|\s*$//g
+    /^W_COM.*/{
+        s/^.*(0x.*),(0x.*)\);/    \{\1, 1, \{\2\}\ },/p
+    }' < "${inputfile}"
+}
+
+
 process_jd()
 {
     case $TYPE in
@@ -267,6 +277,19 @@ process_hx()
     esac
 }
 
+process_ota()
+{
+    case $TYPE in
+        2)
+        conv_ota_type2
+        ;;
+        *)
+        RED IC $IC type $TYPE is not supported.
+        exit 1
+        ;;
+    esac
+}
+
 usage()
 {
 	cat <<EOF
@@ -290,6 +313,7 @@ OPTIONS
         jd for JD936xx ic(Fitipower)
         nt for NT355xx ic(novatek)
         hx for HX82xx ic(himax)
+        ota for ota7290b ic
 
     -h
         See usage.
@@ -310,6 +334,9 @@ main()
         ;;
         hx)
         process_hx | tee "$outfile"
+        ;;
+        ota)
+        process_ota | tee "$outfile"
         ;;
         *)
         RED Error: IC $IC is not supported.
