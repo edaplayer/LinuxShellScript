@@ -22,7 +22,7 @@ GREEN()
 
 error()
 {
-	echo -e  "${RED}$*${END}"
+    echo -e  "${RED}$*${END}"
     exit 1
 }
 
@@ -67,9 +67,10 @@ get_args()
                 break
                 ;;
             *)
-                error "Error: invaild argument."
+                error "Error: invaild argument: $opt"
                 ;;
         esac
+        shift
     done
     GREEN all parameters: $@
 
