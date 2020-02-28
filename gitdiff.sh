@@ -164,7 +164,7 @@ function fetch_commit_diff_by_id()
     GREEN "Run fetch_commit_diff_by_id now."
 
     mkdir -p "$TARGET_PATH"
-    [ $GENERATE_DIFF = 1 ] && git diff --binary "$BEFORE_COMMIT" "$AFTER_COMMIT" > "$TARGET_PATH/commit.diff"
+    [ "$GENERATE_DIFF" = 1 ] && git diff --binary "$BEFORE_COMMIT" "$AFTER_COMMIT" > "$TARGET_PATH/commit.diff"
 
     # 取出目标新节点中有改动的文件
     local IFS=$'\n'
@@ -196,7 +196,7 @@ function fetch_commit_diff_by_id()
 function fetch_current_diff_by_id()
 {
     mkdir -p "$TARGET_PATH"
-    [ $GENERATE_DIFF = 1 ] && git diff --binary > "$TARGET_PATH/current.diff"
+    [ "$GENERATE_DIFF" = 1 ] && git diff --binary > "$TARGET_PATH/current.diff"
     # 取出已修改的文件（默认不包含未跟踪的文件）
     # git status相当于git status -unormal，而git status -u相当于git status -uall，子目录文件也会被显示
     local IFS=$'\n'
@@ -229,7 +229,7 @@ function fetch_branch_diff_by_id()
     LOG_PATH="$ROOT/Patch/$BRANCH/Diff-($BRANCH)_($1)/readme.txt"
 
     mkdir -p "$TARGET_PATH"
-    [ $GENERATE_DIFF = 1 ] && git diff --binary "$1" > "$TARGET_PATH/branch.diff"
+    [ "$GENERATE_DIFF" = 1 ] && git diff --binary "$1" > "$TARGET_PATH/branch.diff"
 
     local IFS=$'\n'
     diff_list=($(git diff --name-status "$1" | \
