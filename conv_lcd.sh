@@ -231,6 +231,31 @@ conv_ota_type2()
     }' < "${inputfile}"
 }
 
+conv_ili_type2()
+{
+    awk -F, '
+    $1 ~ /REGISTER/{
+        gsub(/REGISTER,|[[:space:]]|\/\/.*/,"");
+        printf("    {0x%s, %d, {", $1, $2);
+        for (i = 3; i < NF; i++) {
+            printf ("0x%s, ", $i)
+        }
+        if ($i != "") {
+            printf("0x%s", $i)
+        }
+        printf("} },\n", $i)
+    }' < "${inputfile}"
+}
+
+conv_boe_type2()
+{
+    awk -F= '
+    $0 ~ /=/{
+        gsub(/REGISTER,|[[:space:]]|\/\/.*/,"");
+        printf("    {0x%s, 1, {0x%s} },\n", $1, $2);
+    }' < "${inputfile}"
+}
+
 
 process_jd()
 {
@@ -290,6 +315,32 @@ process_ota()
     esac
 }
 
+process_ili()
+{
+    case $TYPE in
+        2)
+        conv_ili_type2
+        ;;
+        *)
+        RED IC $IC type $TYPE is not supported.
+        exit 1
+        ;;
+    esac
+}
+
+process_boe()
+{
+    case $TYPE in
+        2)
+        conv_boe_type2
+        ;;
+        *)
+        RED IC $IC type $TYPE is not supported.
+        exit 1
+        ;;
+    esac
+}
+
 usage()
 {
 	cat <<EOF
@@ -314,6 +365,8 @@ OPTIONS
         nt for NT355xx ic(novatek)
         hx for HX82xx ic(himax)
         ota for ota7290b ic
+        ili for ili9881 ic
+	boe for nt51021(boe) ic
 
     -h
         See usage.
@@ -337,6 +390,12 @@ main()
         ;;
         ota)
         process_ota | tee "$outfile"
+        ;;
+        ili)
+        process_ili | tee "$outfile"
+        ;;
+        boe)
+        process_boe | tee "$outfile"
         ;;
         *)
         RED Error: IC $IC is not supported.
