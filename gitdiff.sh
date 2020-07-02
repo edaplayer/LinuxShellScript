@@ -45,7 +45,7 @@ BRANCH=$(git branch | awk '$1=="*"{print $2}')
 
 ALIAS=
 # TARGET_PATH，目标路径，默认值Patch/分支/commit id，可通过出传参-a指定后缀Commit-$ALIAS
-TARGET_PATH="$ROOT/Patch/$BRANCH/Commit-$1"
+TARGET_PATH="$ROOT/patch/$BRANCH/commit-$1"
 LOG_PATH="$TARGET_PATH/readme.txt"
 
 # 以下模式三选一
@@ -225,8 +225,8 @@ function fetch_current_diff_by_id()
 # return none
 function fetch_branch_diff_by_id()
 {
-    TARGET_PATH="$ROOT/Patch/$BRANCH/Diff-($BRANCH)_($1)"
-    LOG_PATH="$ROOT/Patch/$BRANCH/Diff-($BRANCH)_($1)/readme.txt"
+    TARGET_PATH="$ROOT/patch/$BRANCH/Diff-($BRANCH)_($1)"
+    LOG_PATH="$ROOT/patch/$BRANCH/Diff-($BRANCH)_($1)/readme.txt"
 
     mkdir -p "$TARGET_PATH"
     [ "$GENERATE_DIFF" = 1 ] && git diff --binary "$1" > "$TARGET_PATH/branch.diff"
@@ -393,13 +393,13 @@ function parse_arg()
     GREEN GENERATE_DIFF="$GENERATE_DIFF"
 
     if [ -n "$ALIAS" ];then
-        TARGET_PATH="$ROOT/Patch/$BRANCH/Commit-$ALIAS"
+        TARGET_PATH="$ROOT/patch/$BRANCH/commit-$ALIAS"
     elif [ -n "$2" ];then
-        TARGET_PATH="$ROOT/Patch/$BRANCH/Commit-$1-$2"
+        TARGET_PATH="$ROOT/patch/$BRANCH/commit-$1-$2"
     elif [ -n "$1" ];then
-        TARGET_PATH="$ROOT/Patch/$BRANCH/Commit-$1"
+        TARGET_PATH="$ROOT/patch/$BRANCH/commit-$1"
     else
-        TARGET_PATH="$ROOT/Patch/$BRANCH/Commit-$TIME"
+        TARGET_PATH="$ROOT/patch/$BRANCH/commit-$TIME"
     fi
     LOG_PATH="$TARGET_PATH/readme.txt"
 
