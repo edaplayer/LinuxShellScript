@@ -5,10 +5,12 @@
 # mail:   @163.com
 # Created Time: Fri 11 Jan 2019 20:03:39 PM CST
 #########################################################################
+
 RED='\e[1;31m'
 GREEN='\e[1;32m'
 YELLOW='\e[1;33m'
 END='\e[0m'
+
 RED()
 {
 	echo -e  "${RED}$*${END}"
@@ -30,34 +32,39 @@ error()
     exit 1
 }
 
-SCRIPT_PATH=$(readlink -f "$BASH_SOURCE")
-SCRIPT_NAME=$(basename "$SCRIPT_PATH")
-# SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
-# CONFIG_PATH=${SCRIPT_DIR}/config.ini
-git config --global core.quotepath false
-# git config --global user.email "edaplayer@163.com"
-# git config --global user.name "Edward.Tang"
+setenv()
+{
+	SCRIPT_PATH=$(readlink -f "$BASH_SOURCE")
+	SCRIPT_NAME=$(basename "$SCRIPT_PATH")
+	# SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+	# CONFIG_PATH=${SCRIPT_DIR}/config.ini
+	git config --global core.quotepath false
+	# git config --global user.email "edaplayer@163.com"
+	# git config --global user.name "Edward.Tang"
 
-GITTOP=$(git rev-parse --show-toplevel)
-ROOT=$(readlink -f "$GITTOP"/..)
-TIME=$(date +%Y-%m-%d-%H-%M)
-BRANCH=$(git branch | awk '$1=="*"{print $2}')
+	GITTOP=$(git rev-parse --show-toplevel)
+	ROOT=$(readlink -f "$GITTOP"/..)
+	TIME=$(date +%Y-%m-%d-%H-%M)
+	BRANCH=$(git branch | awk '$1=="*"{print $2}')
 
-ALIAS=
-# TARGET_PATH，目标路径，默认值Patch/分支/commit id，可通过出传参-a指定后缀Commit-$ALIAS
-TARGET_PATH="$ROOT/patch/$BRANCH/commit-$1"
-LOG_PATH="$TARGET_PATH/readme.txt"
+	ALIAS=
+	# TARGET_PATH，目标路径，默认值Patch/分支/commit id，
+	# 通过parse_arg设置
+	# 可通过出传参-a指定后缀Commit-$ALIAS
+	TARGET_PATH="$ROOT/patch/$BRANCH/commit-$1"
+	LOG_PATH="$TARGET_PATH/readme.txt"
 
-# 以下模式三选一
-DIFF_CURRENT=0 # DIFF_CURRENT=1时，比较当前unstage的文件
-DIFF_COMMIT=0 #按commit id比较，通过传参$1确定
-DIFF_BRANCH=0 #按branch比较，通过传参$1确定
+	# 以下模式三选一
+	DIFF_CURRENT=0 # DIFF_CURRENT=1时，比较当前unstage的文件
+	DIFF_COMMIT=0 #按commit id比较，通过传参$1确定
+	DIFF_BRANCH=0 #按branch比较，通过传参$1确定
 
-# 是否比较未跟踪文件，默认不比较未跟踪文件
-UNTRACK=no
-# UNTRACK=normal
-# UNTRACK=all
-separation="================================================================================"
+	# 是否比较未跟踪文件，默认不比较未跟踪文件
+	UNTRACK=no
+	# UNTRACK=normal
+	# UNTRACK=all
+	separation="================================================================================"
+}
 # --------------------------------------------------------------------------#
 # @brief save_log，保存log到$2路径
 # param1 log内容
@@ -408,12 +415,13 @@ function parse_arg()
 
 function main()
 {
+	setenv $@
+
     # if [ ! -e .git ];then
-        # error "fatal: Not a git repository!!!"
-    # fi
     if [[ "$GITTOP" = "" ]];then
         error "fatal: Not a git repository!!!"
     fi
+
     parse_arg "$@"
 }
 
