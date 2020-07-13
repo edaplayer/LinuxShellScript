@@ -37,9 +37,9 @@ SCRIPT_NAME=$(basename "$SCRIPT_PATH")
 git config --global core.quotepath false
 # git config --global user.email "edaplayer@163.com"
 # git config --global user.name "Edward.Tang"
-# TOP="$PWD"
 
-ROOT=$(readlink -f "$PWD"/..)
+GITTOP=$(git rev-parse --show-toplevel)
+ROOT=$(readlink -f "$GITTOP"/..)
 TIME=$(date +%Y-%m-%d-%H-%M)
 BRANCH=$(git branch | awk '$1=="*"{print $2}')
 
@@ -408,7 +408,10 @@ function parse_arg()
 
 function main()
 {
-    if [ ! -e .git ];then
+    # if [ ! -e .git ];then
+        # error "fatal: Not a git repository!!!"
+    # fi
+    if [[ "$GITTOP" = "" ]];then
         error "fatal: Not a git repository!!!"
     fi
     parse_arg "$@"
