@@ -109,7 +109,7 @@ get_args()
 
 conv_jd_type1()
 {
-	# cat "${inputfile}" | while read line
+	# while read line
 	# do
 		# reg=`echo $line | sed -n -r '
         # s/^\s*\|\s*$//g
@@ -121,19 +121,17 @@ conv_jd_type1()
 		# else
 			# echo $line
 		# fi
-	# done
+	# done < $inputfile
     sed -r '
         s/^\s*\|\s*$//g
         /^SSD_Single.*/{
 			s/^.*0x(.*),0x(.*)\);/0x\2\11500/;
             s/^(0x[a-fA-F0-9]*)/    data_array[0] = \1;/g;
-			# a\dsi_set_cmdq(data_array, 1, 1);\nMDELAY(1);
             a\    dsi_set_cmdq(data_array, 1, 1);
 		}
         /^SSD_CMD.*/{
 			s/^.*0x(.*)\);/0x00\10500/;
             s/^(0x[a-fA-F0-9]*)/    data_array[0] = \1;/g;
-			# a\dsi_set_cmdq(data_array, 1, 1);\nMDELAY(1);
             a\    dsi_set_cmdq(data_array, 1, 1);
         }
         /^Delayms.*/s/Delayms/    MDELAY/
@@ -142,13 +140,13 @@ conv_jd_type1()
 
 conv_jd_type2()
 {
-	# cat "${inputfile}" | while read line
+	# while read line
 	# do
 		# reg=`echo $line | sed -n -r '/^SSD_Single.*/{s/^.*0x(.*),0x(.*)\);/\{0x\2, 1, \1\}/p}'`
 		# if [ -n "$reg" ];then
 			# echo $reg
 		# fi
-	# done
+	# done < $inputfile
     sed -n -r '
     s/^\s*\|\s*$//g
     /^SSD_Single.*/{
@@ -366,7 +364,7 @@ OPTIONS
         hx for HX82xx ic(himax)
         ota for ota7290b ic
         ili for ili9881 ic
-	boe for nt51021(boe) ic
+        boe for nt51021(boe) ic
 
     -h
         See usage.
