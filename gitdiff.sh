@@ -37,7 +37,6 @@ setenv()
 	SCRIPT_PATH=$(readlink -f "$BASH_SOURCE")
 	SCRIPT_NAME=$(basename "$SCRIPT_PATH")
 	# SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
-	# CONFIG_PATH=${SCRIPT_DIR}/config.ini
 	git config --global core.editor vim
 	git config --global core.quotepath false
 	# git config --global user.email "edaplayer@163.com"
@@ -418,7 +417,6 @@ function main()
 {
 	setenv $@
 
-    # if [ ! -e .git ];then
     if [[ "$GITTOP" = "" ]];then
         error "fatal: Not a git repository!!!"
     fi
