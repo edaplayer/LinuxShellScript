@@ -54,10 +54,10 @@ setenv()
 	TARGET_PATH="$ROOT/patch/$BRANCH/commit-$1"
 	LOG_PATH="$TARGET_PATH/readme.txt"
 
-	# 以下模式三选一
-	DIFF_CURRENT=0 # DIFF_CURRENT=1时，比较当前unstage的文件
-	DIFF_COMMIT=0 #按commit id比较，通过传参$1确定
-	DIFF_BRANCH=0 #按branch比较，通过传参$1确定
+	# 以下模式三选一，可根据参数$1判断
+    DIFF_MODE="current" # DIFF_MODE="current"时，比较当前未暂存的文件
+    # DIFF_MODE="commit"时，按commit id比较，通过传参$1确定
+    # DIFF_MODE="branch"时，按branch比较，通过传参$1确定
 
 	# 是否比较未跟踪文件，默认不比较未跟踪文件
 	UNTRACK=no
@@ -306,18 +306,16 @@ function do_start()
 {
     echo
     GREEN "Checking the code, please wait...\n"
-    if [ $# != 0 ];then
-        if [ "$DIFF_COMMIT" = 1 ];then
-            echo -e "Diff mode: compare commit code\n"
-            fetch_commit_diff_by_id "$@"
-        elif [ "$DIFF_BRANCH" = 1 ];then
-            echo -e "Diff mode: compare branch code\n"
-            fetch_branch_diff_by_id "$@"
-        fi
-    else
-        echo -e "Diff mode: compare current code\n"
-        fetch_current_diff_by_id
-    fi
+
+    case "$DIFF_MODE" in
+        current)
+            fetch_current_diff_by_id ;;
+        commit)
+            fetch_commit_diff_by_id "$@" ;;
+        branch)
+            fetch_branch_diff_by_id "$@" ;;
+    esac
+
     GREEN "\n###### Generate diff files success. ######\n"
 }
 
@@ -340,13 +338,13 @@ function parse_arg()
                 ALIAS=$1
                 ;;
             -b)
-                DIFF_BRANCH=1
+                DIFF_MODE="branch"
                 ;;
             -c)
-                DIFF_CURRENT=1
+                DIFF_MODE="current"
                 ;;
             -d)
-                DIFF_COMMIT=1
+                DIFF_MODE="commit"
                 ;;
             -g)
                 GENERATE_DIFF=1
@@ -381,22 +379,18 @@ function parse_arg()
         TARGET_COMMIT=$(git log --all --pretty=format:"%H" | grep "$1")
         TARGET_BRANCH=$(git branch | grep "$1")
         if [ -n "$TARGET_COMMIT" ] || [ "$1" == "HEAD" ];then
-            DIFF_COMMIT=1
+            DIFF_MODE="commit"
         elif [ -n "$TARGET_BRANCH" ];then
-            DIFF_BRANCH=1
-        fi
-
-        if [ "$DIFF_COMMIT" = 0 ] && [ "$DIFF_BRANCH" = 0 ];then
+            DIFF_MODE="branch"
+        else
             error "No such commit id or branch!"
         fi
     else
-        DIFF_CURRENT=1
+        DIFF_MODE="current"
     fi
 
     GREEN ALIAS="$ALIAS"
-    GREEN DIFF_COMMIT="$DIFF_COMMIT"
-    GREEN DIFF_BRANCH="$DIFF_BRANCH"
-    GREEN DIFF_CURRENT="$DIFF_CURRENT"
+    GREEN DIFF_MODE="$DIFF_MODE"
     GREEN GENERATE_DIFF="$GENERATE_DIFF"
 
     if [ -n "$ALIAS" ];then
