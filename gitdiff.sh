@@ -51,15 +51,16 @@ setenv()
 	# TARGET_PATH，目标路径，默认值Patch/分支/commit id，
 	# 通过parse_arg设置
 	# 可通过出传参-a指定后缀Commit-$ALIAS
-	TARGET_PATH="$ROOT/patch/$BRANCH/commit-$1"
-	LOG_PATH="$TARGET_PATH/readme.txt"
+	TARGET_PATH=
+	LOG_PATH=
+	DIFF_MODE=
 
-	# 以下模式三选一，可根据参数$1判断
-    DIFF_MODE="current" # DIFF_MODE="current"时，比较当前未暂存的文件
+    # 以下模式三选一，可根据参数$1判断，或者使用-b -c -d选项
+    # DIFF_MODE="current" # DIFF_MODE="current"时，比较当前未暂存的文件
     # DIFF_MODE="commit"时，按commit id比较，通过传参$1确定
     # DIFF_MODE="branch"时，按branch比较，通过传参$1确定
 
-	# 是否比较未跟踪文件，默认不比较未跟踪文件
+	# 是否比较未跟踪文件，默认不比较未跟踪文件，通过-u选项设定
 	UNTRACK=no
 	# UNTRACK=normal
 	# UNTRACK=all
@@ -112,8 +113,7 @@ function copy_files()
     local dir
 
     GREEN "copy_files:"
-    for f in ${diff_list[@]}
-    do
+    for f in ${diff_list[@]}; do
         [ -z "$f" ] && continue
         TAG=${f:0:1} #第1个字符
         FILE=${f:2}  #第3个字符到末尾
@@ -134,9 +134,9 @@ function copy_files()
         # 如果未指定id，直接拷贝当前文件
         if [ $# == 1 ];then
             # 目标是文件，直接copy 文件
-            if [ -f  "$FILE" ]; then
+            if [ -f "$FILE" ]; then
                 cp -rfa "$FILE" "$target_path/$FILE"
-            elif [ -d  "$FILE" ]; then
+            elif [ -d "$FILE" ]; then
                 # 如果目标是目录(这种情况只有fetch_current模式才会出现)，拷贝到目标父目录
                 cp -rfa "$FILE" "$target_path/$dir"
             else
@@ -326,48 +326,22 @@ function parse_arg()
         eval set -- "${ARGS}"
     else
         usage
-        exit 1
+        error "Error: invaild argument"
     fi
 
-    while [ "$1" ];
-    do
+    while [ "$1" ]; do
         opt=$1
         case "$opt" in
-            -a)
-                shift
-                ALIAS=$1
-                ;;
-            -b)
-                DIFF_MODE="branch"
-                ;;
-            -c)
-                DIFF_MODE="current"
-                ;;
-            -d)
-                DIFF_MODE="commit"
-                ;;
-            -g)
-                GENERATE_DIFF=1
-                ;;
-            -t)
-                ALIAS=$TIME
-                ;;
-            -u)
-                shift
-                UNTRACK=$1
-                ;;
-            -h|--help)
-                usage
-                exit 0
-                ;;
-            --)
-                shift
-                break
-                ;;
-            *)
-                usage
-                error "Error: invaild argument: $opt"
-                ;;
+            -a) shift; ALIAS=$1;;
+            -b) DIFF_MODE="branch";;
+            -c) DIFF_MODE="current";;
+            -d) DIFF_MODE="commit";;
+            -g) GENERATE_DIFF=1;;
+            -t) ALIAS=$TIME;;
+            -u) shift; UNTRACK=$1;;
+            -h|--help) usage; exit 0;;
+            --) shift; break;;
+            *) usage; error "Error: invaild argument: $opt";;
         esac
         shift
     done
@@ -383,7 +357,7 @@ function parse_arg()
         elif [ -n "$TARGET_BRANCH" ];then
             DIFF_MODE="branch"
         else
-            error "No such commit id or branch!"
+            error "Error: No such commit id or branch: $1"
         fi
     else
         DIFF_MODE="current"
@@ -409,7 +383,7 @@ function parse_arg()
 
 function main()
 {
-	setenv $@
+	setenv
 
     if [[ "$GITTOP" = "" ]];then
         error "fatal: Not a git repository!!!"
