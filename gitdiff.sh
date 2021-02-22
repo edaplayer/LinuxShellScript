@@ -120,7 +120,7 @@ function copy_files()
         if [ "$TAG" == "M" ];then
             GREEN  "$TAG    $FILE"
         elif [ "$TAG" == "D" ];then
-            RED "$TAG   $FILE"
+            RED "$TAG    $FILE"
         elif [ "$TAG" == "A" ];then
             YELLOW "$TAG    $FILE"
         else
@@ -138,9 +138,9 @@ function copy_files()
                 cp -rfa "$FILE" "$target_path/$FILE"
             elif [ -d  "$FILE" ]; then
                 # 如果目标是目录(这种情况只有fetch_current模式才会出现)，拷贝到目标父目录
-                cp  -rfa "$FILE" "$target_path/$dir"
+                cp -rfa "$FILE" "$target_path/$dir"
             else
-                RED "Error: $FILE couldn't be found."
+                error "Error: $FILE couldn't be found."
             fi
         # 指定id，则使用git show重定向方式拷贝文件
         else
@@ -207,7 +207,7 @@ function fetch_current_diff_by_id()
     # 取出已修改的文件（默认不包含未跟踪的文件）
     # git status相当于git status -unormal，而git status -u相当于git status -uall，子目录文件也会被显示
     local IFS=$'\n'
-    diff_list=$(git status -su$UNTRACK | sed -re 's/^\s*(\S+)\s+/\1 /' -e 's/^\?\?/A/g')
+    diff_list=($(git status -su$UNTRACK | sed -re 's/^\s*(\S+)\s+/\1 /' -e 's/^\?\?/A/g' -e 's/^D.*//'))
 
     mkdir -p "$TARGET_PATH"/after
     LOGS=$(git log -1)
@@ -219,7 +219,7 @@ function fetch_current_diff_by_id()
 
     # 保存现场，取出原始文件（排除未跟踪的文件）
     GREEN "Step2: get original files\n"
-    diff_list=$(git status -suno | sed -re 's/^\s*(\S+)\s+/\1 /' -e 's/^\?\?/A/g')
+    diff_list=($(git status -suno | sed -re 's/^\s*(\S+)\s+/\1 /' -e 's/^\?\?/A/g' -e 's/^A.*//'))
     echo -e "previous diff_list=\n$diff_list\n"
     mkdir -p "$TARGET_PATH"/before
     copy_files HEAD "$TARGET_PATH"/before
@@ -240,7 +240,7 @@ function fetch_branch_diff_by_id()
 
     local IFS=$'\n'
     diff_list=($(git diff --name-status "$1" | \
-        sed -re 's/^\s*(\S+)\s+/\1 /' -e 's/^\?\?/A/g'))
+        sed -re 's/^\s*(\S+)\s+/\1 /' -e 's/^\?\?/A/g' -e 's/^D.*//'))
     mkdir -p "$TARGET_PATH"/after
     LOGS=$(git log -1)
     save_log "$LOGS" "$LOG_PATH"
