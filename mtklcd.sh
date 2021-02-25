@@ -340,37 +340,27 @@ OPTIONS
 EOF
 }
 
+work()
+{
+    case $IC in
+        jd) process_jd;;
+        nt) process_nt;;
+        hx) process_hx;;
+        ota) process_ota;;
+        ili) process_ili;;
+        boe) process_boe;;
+        *) error Error: IC $IC is not supported.;;
+    esac
+    conv_table_to_dsi lcd_table.c | tee lcd_dsi.c
+}
+
 main()
 {
     get_args $@
     echo ==========================================================================
     echo -e "Start converting.\n"
-    case $IC in
-        jd)
-        process_jd
-        ;;
-        nt)
-        process_nt
-        ;;
-        hx)
-        process_hx
-        ;;
-        ota)
-        process_ota
-        ;;
-        ili)
-        process_ili
-        ;;
-        boe)
-        process_boe
-        ;;
-        *)
-        RED Error: IC $IC is not supported.
-        usage
-        ;;
-    esac
 
-    conv_table_to_dsi lcd_table.c | tee lcd_dsi.c
+    work
 
     echo
     echo ==========================================================================
