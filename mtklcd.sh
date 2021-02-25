@@ -109,14 +109,12 @@ conv_jd_dsi()
         printf("    data_array[0] = 0x00%2X0500;\n", cmd)
         printf("    dsi_set_cmdq(data_array, 1, 1);\n")
         next
-    };
-
-    /Delayms/{
-        gsub(/Delayms/, "   MDELAY", $0);
     }
 
-    1
-    ' < "${inputfile}"
+    /Delayms/{
+        gsub(/Delayms/, "    MDELAY", $0);
+    }
+    1 ' < "${inputfile}"
 }
 
 conv_jd_table()
@@ -139,9 +137,8 @@ conv_jd_table()
         data0 = strtonum($1)
         printf("    {0x%02X, 0, {} },%s\n", data0, comment[1])
         next
-    };
-
-    ' < "${inputfile}"
+    }
+    # 1 ' < "${inputfile}"
 }
 
 conv_nt_dsi()
@@ -281,18 +278,18 @@ conv_table_to_dsi()
     }' < "${1}"
 }
 
-
 process_jd()
 {
     conv_jd_table | tee lcd_table.c
     conv_jd_dsi | tee lcd_dsi.c
+    cp lcd_dsi.c lcd_dsi_jd.c
 }
 
 process_nt()
 {
     conv_nt_dsi | tee lcd_dsi.c
     conv_nt_table | tee lcd_table.c
-    conv_table_to_dsi lcd_table.c | tee lcd_dsi_nt.c
+    cp lcd_dsi.c lcd_dsi_nt.c
 }
 
 process_hx()
@@ -303,19 +300,16 @@ process_hx()
 process_ota()
 {
     conv_ota_table | tee lcd_table.c
-    conv_table_to_dsi lcd_table.c | tee lcd_dsi.c
 }
 
 process_ili()
 {
     conv_ili_table | tee lcd_table.c
-    conv_table_to_dsi lcd_table.c | tee lcd_dsi.c
 }
 
 process_boe()
 {
     conv_boe_table | tee lcd_table.c
-    conv_table_to_dsi lcd_table.c | tee lcd_dsi.c
 }
 
 usage()
@@ -375,6 +369,9 @@ main()
         usage
         ;;
     esac
+
+    conv_table_to_dsi lcd_table.c | tee lcd_dsi.c
+
     echo
     echo ==========================================================================
     GREEN HEAD=$HEAD
