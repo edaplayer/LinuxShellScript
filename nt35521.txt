@@ -1,0 +1,16 @@
+#NT35521S Initial code For INL 10.1" Ariel
+#20150412 Update
+
+HWRST 20
+DELAY 120
+//Test comand_Update 20150902
+REGW 0xFF,0xAA,0x55,0x25,0x01
+REGW 0xFC,0x08
+Delay 1
+REGW 0xFC,0x00
+
+Delay 1
+
+REGW 0x35
+REGW 0x11
+REGW 0x29
