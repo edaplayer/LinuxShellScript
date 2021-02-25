@@ -28,7 +28,6 @@ error()
 
 get_args()
 {
-    HEAD=
     IC=
     outfile=lcd_table.c
 
@@ -364,10 +363,8 @@ main()
 
     echo
     echo ==========================================================================
-    GREEN HEAD=$HEAD
     GREEN "inputfile: $inputfile"
-    GREEN "outfile:   $outfile"
-    GREEN "IC:  $IC"
+    GREEN "outfile:   $outfile lcd_dsi.c"
     GREEN Convert completed successfully.
     echo ==========================================================================
 }
