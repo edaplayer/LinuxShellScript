@@ -287,27 +287,36 @@ conv_table_to_dsi()
 usage()
 {
 	cat <<EOF
-    Convert lcd init code of vendor to mtk lcm code. Default output file is lcd.c
-    Output file is lcd_dsi.c and lcd_table.c
+    Convert lcd initial code of vendor to mtk lcm code
+    Default output file is lcd_dsi.c and lcd_table.c
 
 SYNOPSIS
 ${script} [OPTION] <inputfile> [outputfile]
 
-Example: ${script} input.txt
-        or
-        ${script} input.txt -i jd
-        or
-        ${script} input.txt -i nt
+Example:
+        Default IC is jd:
+            \$ ${script} jd9365.txt
+
+        or for NT35521 ic:
+
+            \$ ${script} nt35521.txt -i nt
+
+        or specify the output file(filename):
+
+            \$ ${script} nt35521.txt -i nt mtklcm.c
 
 OPTIONS
     -i
-        IC Model: jd, nt, default value is jd
-        jd for JD936x ic(Fitipower)
-        nt for NT355xx ic(Novatek)
-        hx for HX82xx ic(Himax)
-        ota for ota7290b ic(Focaltech)
-        ili for ili9881 ic(ILITEK)
-        boe for nt51021(Boe) ic
+        IC Model: jd, nt, default value is jd.
+
+        The possible options are:
+
+        •  jd - JD936x ic(Fitipower)
+        •  nt - NT355xx ic(Novatek)
+        •  hx - HX82xx ic(Himax)
+        •  ota - ota7290b ic(Focaltech)
+        •  ili - ili9881 ic(ILITEK)
+        •  boe - nt51021 ic(Boe)
 
     -h
         See usage.
