@@ -65,7 +65,7 @@ get_args()
         esac
         shift
     done
-    GREEN all parameters: $@
+    echo all parameters: "$@"
 
     if [ -e "$1" ]; then
         inputfile="$1"
@@ -331,6 +331,8 @@ work()
         boe) conv_boe_table | tee lcd_table.c;;
         *) error Error: IC $IC is not supported.;;
     esac
+    echo ==========================================================================
+    echo -e "Run conv_table_to_dsi now.\n"
     conv_table_to_dsi lcd_table.c | tee lcd_dsi.c
 }
 
@@ -342,12 +344,10 @@ main()
 
     work
 
-    echo
     echo ==========================================================================
-    GREEN "inputfile: $inputfile"
-    GREEN "outfile:   $outfile lcd_dsi.c"
+    echo -e "Input file: ${GREEN}$inputfile${END}"
+    echo -e "Output file:   ${GREEN}$outfile lcd_dsi.c${END}"
     GREEN Convert completed successfully.
-    echo ==========================================================================
 }
 
 main $@
