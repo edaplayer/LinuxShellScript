@@ -1,8 +1,9 @@
 #!/bin/bash
 #########################################################################
-# File Name: convert_lcd_code.sh
+# File Name: mtklcd.sh
 # Author: Edward.Tang
-# mail:   @163.com
+# Mail:   edaplayer@163.com
+# URL:    https://github.com/edaplayer/script/blob/master/mtklcd.sh
 # Created Time: Fri 11 Jan 2019 04:03:39 PM CST
 #########################################################################
 script=$(basename $0)
