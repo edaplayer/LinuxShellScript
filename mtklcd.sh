@@ -296,21 +296,6 @@ process_hx()
     conv_hx_dsi | tee lcd_dsi.c
 }
 
-process_ota()
-{
-    conv_ota_table | tee lcd_table.c
-}
-
-process_ili()
-{
-    conv_ili_table | tee lcd_table.c
-}
-
-process_boe()
-{
-    conv_boe_table | tee lcd_table.c
-}
-
 usage()
 {
 	cat <<EOF
@@ -322,17 +307,19 @@ ${script} [OPTION] <inputfile> [outputfile]
 
 Example: ${script} input.txt
         or
-        ${script} input.txt -t1 -i jd
+        ${script} input.txt -i jd
+        or
+        ${script} input.txt -i nt
 
 OPTIONS
     -i
-        IC Model: jd or nt, default value is jd
-        jd for JD936xx ic(Fitipower)
-        nt for NT355xx ic(novatek)
-        hx for HX82xx ic(himax)
-        ota for ota7290b ic
-        ili for ili9881 ic
-        boe for nt51021(boe) ic
+        IC Model: jd, nt, default value is jd
+        jd for JD936x ic(Fitipower)
+        nt for NT355xx ic(Novatek)
+        hx for HX82xx ic(Himax)
+        ota for ota7290b ic(Focaltech)
+        ili for ili9881 ic(ILITEK)
+        boe for nt51021(Boe) ic
 
     -h
         See usage.
@@ -345,9 +332,9 @@ work()
         jd) process_jd;;
         nt) process_nt;;
         hx) process_hx;;
-        ota) process_ota;;
-        ili) process_ili;;
-        boe) process_boe;;
+        ota) conv_ota_table | tee lcd_table.c;;
+        ili) conv_ili_table | tee lcd_table.c;;
+        boe) conv_boe_table | tee lcd_table.c;;
         *) error Error: IC $IC is not supported.;;
     esac
     conv_table_to_dsi lcd_table.c | tee lcd_dsi.c
