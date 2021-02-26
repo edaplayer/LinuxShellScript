@@ -286,20 +286,6 @@ conv_table_to_dsi()
     }' < "${1}"
 }
 
-process_jd()
-{
-    conv_jd_table | tee lcd_table.c
-    conv_jd_dsi | tee lcd_dsi.c
-    cp lcd_dsi.c lcd_dsi_jd.c
-}
-
-process_nt()
-{
-    conv_nt_dsi | tee lcd_dsi.c
-    conv_nt_table | tee lcd_table.c
-    cp lcd_dsi.c lcd_dsi_nt.c
-}
-
 usage()
 {
 	cat <<EOF
@@ -333,8 +319,8 @@ EOF
 work()
 {
     case $IC in
-        jd) process_jd;;
-        nt) process_nt;;
+        jd) conv_jd_table | tee lcd_table.c;;
+        nt) conv_nt_table | tee lcd_table.c;;
         hx) conv_hx_table | tee lcd_table.c;;
         ota) conv_ota_table | tee lcd_table.c;;
         ili) conv_ili_table | tee lcd_table.c;;
