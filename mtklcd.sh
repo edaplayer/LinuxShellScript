@@ -285,7 +285,7 @@ usage()
 {
 	cat <<EOF
     Convert lcd initial code of vendor to mtk lcm code
-    Default output file is lcd_dsi.c and lcd_table.c
+    Default output file is lcd_table.c and lcd_dsi.c
 
 SYNOPSIS
 ${script} [OPTION] <inputfile> [outputfile]
@@ -323,17 +323,17 @@ EOF
 work()
 {
     case $IC in
-        jd) conv_jd_table | tee lcd_table.c;;
-        nt) conv_nt_table | tee lcd_table.c;;
-        hx) conv_hx_table | tee lcd_table.c;;
-        ota) conv_ota_table | tee lcd_table.c;;
-        ili) conv_ili_table | tee lcd_table.c;;
-        boe) conv_boe_table | tee lcd_table.c;;
+        jd) conv_jd_table | tee ${outfile};;
+        nt) conv_nt_table | tee ${outfile};;
+        hx) conv_hx_table | tee ${outfile};;
+        ota) conv_ota_table | tee ${outfile};;
+        ili) conv_ili_table | tee ${outfile};;
+        boe) conv_boe_table | tee ${outfile};;
         *) error Error: IC $IC is not supported.;;
     esac
     echo ==========================================================================
     echo -e "Run conv_table_to_dsi now.\n"
-    conv_table_to_dsi lcd_table.c | tee lcd_dsi.c
+    conv_table_to_dsi ${outfile} | tee lcd_dsi.c
 }
 
 main()
