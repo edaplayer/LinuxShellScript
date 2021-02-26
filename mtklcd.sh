@@ -5,7 +5,7 @@
 # mail:   @163.com
 # Created Time: Fri 11 Jan 2019 04:03:39 PM CST
 #########################################################################
-script=`basename $0`
+script=$(basename $0)
 GREEN='\e[1;32m'
 RED='\e[1;31m'
 END='\e[0m'
@@ -36,14 +36,13 @@ get_args()
         exit 1
     fi
 
-    if ARGS=`getopt -o t:i:h -l help -- $@`;then
+    if ARGS=$(getopt -o t:i:h -l help -- "$@");then
         echo ARGS="$ARGS"
         eval set -- "${ARGS}"
     else
-        RED please confirm the filename without space.
-        usage
-        exit 1
+        error Please confirm the arguments.
     fi
+
     while [ "$1" ];
     do
         opt=$1
@@ -71,8 +70,7 @@ get_args()
     if [ -e "$1" ]; then
         inputfile="$1"
     else
-        RED inputfile "$1" is not exist, please confirm the filename.
-        usage
+        error Inputfile "$1" is not exist, please confirm the filename.
         exit 1
     fi
 
