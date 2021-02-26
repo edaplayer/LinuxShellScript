@@ -191,6 +191,15 @@ conv_nt_table()
     }' < "${inputfile}"
 }
 
+conv_hx_table()
+{
+    awk '
+    {
+        gsub(/0x/, "");
+        printf("    {0x%s, 1, {0x%s} },\n", $1, $2);
+    }' < "${inputfile}"
+}
+
 conv_hx_dsi()
 {
     awk '
@@ -291,11 +300,6 @@ process_nt()
     cp lcd_dsi.c lcd_dsi_nt.c
 }
 
-process_hx()
-{
-    conv_hx_dsi | tee lcd_dsi.c
-}
-
 usage()
 {
 	cat <<EOF
@@ -331,7 +335,7 @@ work()
     case $IC in
         jd) process_jd;;
         nt) process_nt;;
-        hx) process_hx;;
+        hx) conv_hx_table | tee lcd_table.c;;
         ota) conv_ota_table | tee lcd_table.c;;
         ili) conv_ili_table | tee lcd_table.c;;
         boe) conv_boe_table | tee lcd_table.c;;
