@@ -142,9 +142,7 @@ conv_nt_dsi()
 {
     awk -F, '
     $1 ~ /REGW|regw/{
-        gsub(/REGW|regw|[[:space:]]|\/\/.*/,"");
-        # print "NF=" NF
-        # print "$0=" $0
+        gsub(/REGW|regw|\s|\/\/.*/, "");
         if(NF <= 2)
         {
             cmd1 = strtonum($1); cmd2 = strtonum($2);
@@ -179,7 +177,7 @@ conv_nt_table()
 {
     awk -F, '
     $1 ~ /REGW|regw/{
-        gsub(/REGW|regw|[[:space:]]|\/\/.*/,"");
+        gsub(/REGW|regw|\s|\/\/.*/,"");
         printf("    {%s, %d, {", $1, NF-1);
         for(i = 2; i < NF; i++)
         {
@@ -223,7 +221,7 @@ conv_ili_table()
 {
     awk -F, '
     $1 ~ /REGISTER/{
-        gsub(/REGISTER,|[[:space:]]|\/\/.*/,"");
+        gsub(/REGISTER,|\s|\/\/.*/,"");
         printf("    {0x%s, %d, {", $1, $2);
         for (i = 3; i < NF; i++) {
             printf ("0x%s, ", $i)
@@ -239,7 +237,7 @@ conv_boe_table()
 {
     awk -F= '
     $0 ~ /=/{
-        gsub(/REGISTER,|[[:space:]]|\/\/.*/,"");
+        gsub(/REGISTER,|\s|\/\/.*/,"");
         printf("    {0x%s, 1, {0x%s} },\n", $1, $2);
     }' < "${inputfile}"
 }
@@ -248,10 +246,9 @@ conv_table_to_dsi()
 {
     awk -F, -v OFS="," '
     /{.*}/{
-        gsub(/{|}|[[:space:]]|\/\/.*/,"");
-
+        gsub(/{|}|\s|\/\/.*/,"");
         len = $2 + 1
-        $2=""
+        $2 = ""
         sub(",,", ",", $0);
 
         if(len <= 2)
