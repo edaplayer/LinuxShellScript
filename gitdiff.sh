@@ -45,6 +45,30 @@ OPTIONS
        -h, --help
            See usage.
 
+EXAMPLES
+       $SCRIPT_NAME
+
+       $SCRIPT_NAME -a my_patch_20200101
+            Fetch current diff files and specify patch name to my_patch_20200101
+
+       $SCRIPT_NAME -p ./dir/
+            Fetch current diff files, only for ./dir/ directory.
+
+       $SCRIPT_NAME -uall
+            Fetch current diff files, included untrack files.
+
+       $SCRIPT_NAME HEAD
+            Fetch HEAD diff files.
+
+       $SCRIPT_NAME <commit> -g
+            Fetch diff files of commit and generate diff details.
+
+       $SCRIPT_NAME <old_commit> <new_commit>
+            Fetch diff files between two commits.
+
+       $SCRIPT_NAME <branch>
+            Fetch branch diff files.
+
 NOTE
        If no options are specified, default mode is current mode.
 EOF
