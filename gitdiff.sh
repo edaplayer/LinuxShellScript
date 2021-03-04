@@ -39,6 +39,7 @@ setenv()
 	# SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
 	git config --global core.editor vim
 	git config --global core.quotepath false
+	git config --global color.ui true
 	# git config --global user.email "edaplayer@163.com"
 	# git config --global user.name "Edward.Tang"
 
