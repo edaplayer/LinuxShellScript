@@ -91,7 +91,7 @@ get_args()
 conv_jd_dsi()
 {
     awk -F, -v OFS=", " '
-    /SSD_Single/{
+    /SSD_Single/ {
         gsub(/SSD_Single|[();]|\s*|\/\/.*/, "", $0);
         data0 = strtonum($1)
         data1 = strtonum($2)
@@ -101,7 +101,7 @@ conv_jd_dsi()
         next
     }
 
-    /SSD_CMD/{
+    /SSD_CMD/ {
         gsub(/SSD_CMD|[();]|\s*|\/\/.*/, "", $0);
         cmd = strtonum($1)
         printf("    data_array[0] = 0x00%2X0500;\n", cmd)
@@ -109,7 +109,7 @@ conv_jd_dsi()
         next
     }
 
-    /Delayms/{
+    /Delayms/ {
         gsub(/Delayms/, "    MDELAY", $0);
     }
     1 ' < "${inputfile}"
@@ -118,7 +118,7 @@ conv_jd_dsi()
 conv_jd_table()
 {
     awk -F, '
-    /SSD_Single/{
+    /SSD_Single/ {
         match($0, "(//.*)", comment)
 
         gsub(/SSD_Single|[();]|\s*|\/\/.*/, "", $0);
@@ -129,7 +129,7 @@ conv_jd_table()
         next
     }
 
-    /SSD_CMD/{
+    /SSD_CMD/ {
         match($0, "(//.*)", comment)
         gsub(/SSD_CMD|[();]|\s*|\/\/.*/, "", $0);
         data0 = strtonum($1)
@@ -142,26 +142,21 @@ conv_jd_table()
 conv_nt_dsi()
 {
     awk -F, '
-    $1 ~ /REGW|regw/{
+    $1 ~ /REGW|regw/ {
         gsub(/REGW|regw|\s|\/\/.*/, "");
-        if(NF <= 2)
-        {
+        if (NF <= 2) {
             cmd1 = strtonum($1); cmd2 = strtonum($2);
             printf("    data_array[0] = 0x%02X%02X%d500;\n", cmd2, cmd1, NF-1)
             printf("    dsi_set_cmdq(data_array, 1, 1);\n")
-        }
-        else
-        {
+        } else {
             lines = int(NF/4) + 1;
-            if(NF%4 == 0)
-            {
+            if (NF%4 == 0) {
                 # print "NF is a multiple of 4"
                 lines--;
             }
             # print "lines=" lines
             printf("    data_array[0] = 0x%04x3902;\n", NF)
-            for(row = 0; row < lines; row++)
-            {
+            for (row = 0; row < lines; row++) {
                 i = row * 4; # print "i=" i;
                 cmd1 = strtonum($(i + 1)); cmd2 = strtonum($(i + 2));
                 cmd3 = strtonum($(i + 3)); cmd4 = strtonum($(i + 4));
@@ -177,11 +172,10 @@ conv_nt_dsi()
 conv_nt_table()
 {
     awk -F, '
-    $1 ~ /REGW|regw/{
+    $1 ~ /REGW|regw/ {
         gsub(/REGW|regw|\s|\/\/.*/,"");
         printf("    {%s, %d, {", $1, NF-1);
-        for(i = 2; i < NF; i++)
-        {
+        for (i = 2; i < NF; i++) {
             printf ("%s, ", $i)
         }
         printf("%s} },\n", $i)
@@ -213,7 +207,7 @@ conv_ota_table()
 {
     sed -n -r '
     s/^\s*\|\s*$//g
-    /^W_COM.*/{
+    /^W_COM.*/ {
         s/^.*(0x.*),(0x.*)\);/    \{\1, 1, \{\2\}\ },/p
     }' < "${inputfile}"
 }
@@ -221,7 +215,7 @@ conv_ota_table()
 conv_ili_table()
 {
     awk -F, '
-    $1 ~ /REGISTER/{
+    $1 ~ /REGISTER/ {
         gsub(/REGISTER,|\s|\/\/.*/,"");
         printf("    {0x%s, %d, {", $1, $2);
         for (i = 3; i < NF; i++) {
@@ -237,7 +231,7 @@ conv_ili_table()
 conv_boe_table()
 {
     awk -F= '
-    $0 ~ /=/{
+    $0 ~ /=/ {
         gsub(/REGISTER,|\s|\/\/.*/,"");
         printf("    {0x%s, 1, {0x%s} },\n", $1, $2);
     }' < "${inputfile}"
@@ -246,30 +240,25 @@ conv_boe_table()
 conv_table_to_dsi()
 {
     awk -F, -v OFS="," '
-    /{.*}/{
+    /{.*}/ {
         gsub(/{|}|\s|\/\/.*/,"");
         len = $2 + 1
         $2 = ""
         sub(",,", ",", $0);
 
-        if(len <= 2)
-        {
+        if (len <= 2) {
             cmd1 = strtonum($1); cmd2 = strtonum($2);
             printf("    data_array[0] = 0x%02X%02X%d500;\n", cmd2, cmd1, len-1)
             printf("    dsi_set_cmdq(data_array, 1, 1);\n")
-        }
-        else
-        {
+        } else {
             lines = int(len/4) + 1;
-            if(len%4 == 0)
-            {
+            if (len%4 == 0) {
                 # print "len is a multiple of 4"
                 lines--;
             }
             # print "lines=" lines
             printf("    data_array[0] = 0x%04x3902;\n", len)
-            for(row = 0; row < lines; row++)
-            {
+            for (row = 0; row < lines; row++) {
                 i = row * 4; # print "i=" i;
                 cmd1 = strtonum($(i + 1)); cmd2 = strtonum($(i + 2));
                 cmd3 = strtonum($(i + 3)); cmd4 = strtonum($(i + 4));
