@@ -54,12 +54,12 @@ END='\e[0m'
 
 RED()
 {
-	echo -e  "${RED}$*${END}"
+    echo -e  "${RED}$*${END}"
 }
 
 GREEN()
 {
-	echo -e  "${GREEN}$*${END}"
+    echo -e  "${GREEN}$*${END}"
 }
 
 YELLOW()
@@ -302,7 +302,7 @@ function fetch_branch_diff_by_id()
     GREEN "fetch_branch_diff_by_id success."
 }
 
-function do_start()
+function work()
 {
     echo
     GREEN "Checking the code, please wait...\n"
@@ -378,7 +378,7 @@ function parse_arg()
     fi
     LOG_PATH="$TARGET_PATH/readme.txt"
 
-    do_start "$@"
+    work "$@"
 }
 
 function main()
