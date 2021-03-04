@@ -5,6 +5,47 @@
 # mail:   @163.com
 # Created Time: Fri 11 Jan 2019 20:03:39 PM CST
 #########################################################################
+function usage()
+{
+cat <<EOF
+NAME
+       $SCRIPT_NAME - fetch changes between commits, commit and working tree, etc
+
+SYNOPSIS
+       $SCRIPT_NAME [options] [<commit>]
+       $SCRIPT_NAME [options] <commmit> [<commit>]
+       $SCRIPT_NAME [options] <branch>
+
+OPTIONS
+       -a
+           assign ALIAS var to log path.
+
+       -b
+           branch mode.
+
+       -c
+           current mode.
+
+       -d
+           commit mode.
+
+       -g
+           generate diff file.
+
+       -t
+           For current mode, time as log path instead of commite id.
+
+       -u
+           The status mode parameter is used to specify the handling of untracked files. It is optional: it defaults to no.
+           Please see git status --help for more details.
+
+       -h, --help
+           See usage.
+
+NOTE
+       If no options are specified, default mode is current mode.
+EOF
+}
 
 RED='\e[1;31m'
 GREEN='\e[1;32m'
@@ -259,48 +300,6 @@ function fetch_branch_diff_by_id()
     mkdir -p "$TARGET_PATH"/before
     copy_files "$1" "$TARGET_PATH"/before
     GREEN "fetch_branch_diff_by_id success."
-}
-
-function usage()
-{
-cat <<EOF
-NAME
-       $SCRIPT_NAME - fetch changes between commits, commit and working tree, etc
-
-SYNOPSIS
-       $SCRIPT_NAME [options] [<commit>]
-       $SCRIPT_NAME [options] <commmit> [<commit>]
-       $SCRIPT_NAME [options] <branch>
-
-OPTIONS
-       -a
-           assign ALIAS var to log path.
-
-       -b
-           branch mode.
-
-       -c
-           current mode.
-
-       -d
-           commit mode.
-
-       -g
-           generate diff file.
-
-       -t
-           For current mode, time as log path instead of commite id.
-
-       -u
-           The status mode parameter is used to specify the handling of untracked files. It is optional: it defaults to no.
-           Please see git status --help for more details.
-
-       -h, --help
-           See usage.
-
-NOTE
-       If no options are specified, default mode is current mode.
-EOF
 }
 
 function do_start()
