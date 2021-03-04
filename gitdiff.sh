@@ -13,7 +13,7 @@ NAME
 
 SYNOPSIS
        $SCRIPT_NAME [options] [<commit>]
-       $SCRIPT_NAME [options] <commmit> [<commit>]
+       $SCRIPT_NAME [options] <old_commit> [<new_commit>]
        $SCRIPT_NAME [options] <branch>
 
 OPTIONS
@@ -32,8 +32,11 @@ OPTIONS
        -g
            generate diff file.
 
+       -p
+           specify diff path.
+
        -t
-           For current mode, time as log path instead of commite id.
+           For current mode, time as log path instead of commit id.
 
        -u
            The status mode parameter is used to specify the handling of untracked files. It is optional: it defaults to no.
@@ -135,7 +138,7 @@ function save_log()
 # --------------------------------------------------------------------------#
 # @function copy_files
 # @brief copy差异列表中的所有文件到目标路径(通过git show方式)
-# param1 commmit id
+# param1 commit id
 # param2 目标路径
 # or
 # param1 目标路径
@@ -213,11 +216,11 @@ function fetch_commit_diff_by_id()
     GREEN "Run fetch_commit_diff_by_id now."
 
     mkdir -p "$TARGET_PATH"
-    [ "$GENERATE_DIFF" = 1 ] && git diff --binary "$BEFORE_COMMIT" "$AFTER_COMMIT" > "$TARGET_PATH/commit.diff"
+    [ "$GENERATE_DIFF" = 1 ] && git diff --binary "$BEFORE_COMMIT" "$AFTER_COMMIT" ${DIFF_PATH} > "$TARGET_PATH/commit.diff"
 
     # 取出目标新节点中有改动的文件
     local IFS=$'\n'
-    diff_list=($(git diff --name-status "$BEFORE_COMMIT" "$AFTER_COMMIT" |\
+    diff_list=($(git diff --name-status "$BEFORE_COMMIT" "$AFTER_COMMIT" ${DIFF_PATH} |\
         sed -re 's/^\s*(\S+)\s+/\1 /' -e 's/^\?\?/A/g'))
     mkdir -p "$TARGET_PATH"/after
     LOGS=$(git log "$BEFORE_COMMIT".."$AFTER_COMMIT")
@@ -229,7 +232,7 @@ function fetch_commit_diff_by_id()
     # 取出旧节点（before文件）
     GREEN "Step2: get commit $BEFORE_COMMIT files.\n"
 
-    diff_list=($(git diff --name-status "$BEFORE_COMMIT" "$AFTER_COMMIT" |\
+    diff_list=($(git diff --name-status "$BEFORE_COMMIT" "$AFTER_COMMIT" ${DIFF_PATH} |\
         sed -re 's/^\s*(\S+)\s+/\1 /' -e 's/^\?\?/A/g' -e 's/^A.*//'))
     echo -e "previous diff_list=\n${diff_list[*]}\n"
 
@@ -245,11 +248,11 @@ function fetch_commit_diff_by_id()
 function fetch_current_diff_by_id()
 {
     mkdir -p "$TARGET_PATH"
-    [ "$GENERATE_DIFF" = 1 ] && git diff --binary > "$TARGET_PATH/current.diff"
+    [ "$GENERATE_DIFF" = 1 ] && git diff --binary ${DIFF_PATH} > "$TARGET_PATH/current.diff"
     # 取出已修改的文件（默认不包含未跟踪的文件）
     # git status相当于git status -unormal，而git status -u相当于git status -uall，子目录文件也会被显示
     local IFS=$'\n'
-    diff_list=($(git status -su$UNTRACK | sed -re 's/^\s*(\S+)\s+/\1 /' -e 's/^\?\?/A/g' -e 's/^D.*//'))
+    diff_list=($(git status -su$UNTRACK ${DIFF_PATH} | sed -re 's/^\s*(\S+)\s+/\1 /' -e 's/^\?\?/A/g' -e 's/^D.*//'))
 
     mkdir -p "$TARGET_PATH"/after
     LOGS=$(git log -1)
@@ -261,7 +264,7 @@ function fetch_current_diff_by_id()
 
     # 保存现场，取出原始文件（排除未跟踪的文件）
     GREEN "Step2: get original files\n"
-    diff_list=($(git status -suno | sed -re 's/^\s*(\S+)\s+/\1 /' -e 's/^\?\?/A/g' -e 's/^A.*//'))
+    diff_list=($(git status -suno ${DIFF_PATH} | sed -re 's/^\s*(\S+)\s+/\1 /' -e 's/^\?\?/A/g' -e 's/^A.*//'))
     echo -e "previous diff_list=\n$diff_list\n"
     mkdir -p "$TARGET_PATH"/before
     copy_files HEAD "$TARGET_PATH"/before
@@ -278,10 +281,10 @@ function fetch_branch_diff_by_id()
     LOG_PATH="$ROOT/patch/$BRANCH/Diff-($BRANCH)_($1)/readme.txt"
 
     mkdir -p "$TARGET_PATH"
-    [ "$GENERATE_DIFF" = 1 ] && git diff --binary "$1" > "$TARGET_PATH/branch.diff"
+    [ "$GENERATE_DIFF" = 1 ] && git diff --binary "$1" ${DIFF_PATH} > "$TARGET_PATH/branch.diff"
 
     local IFS=$'\n'
-    diff_list=($(git diff --name-status "$1" | \
+    diff_list=($(git diff --name-status "$1" ${DIFF_PATH} | \
         sed -re 's/^\s*(\S+)\s+/\1 /' -e 's/^\?\?/A/g' -e 's/^D.*//'))
     mkdir -p "$TARGET_PATH"/after
     LOGS=$(git log -1)
@@ -292,7 +295,7 @@ function fetch_branch_diff_by_id()
 
     # 取出旧节点（before文件）
     GREEN "Step2: get branch $1 files.\n"
-    diff_list=($(git diff --name-status "$1" | \
+    diff_list=($(git diff --name-status "$1" ${DIFF_PATH} | \
         sed -re 's/^\s*(\S+)\s+/\1 /' -e 's/^\?\?/A/g' -e 's/^A.*//'))
 
     echo -e "branch $1 diff_list=\n${diff_list[*]}\n"
@@ -321,7 +324,7 @@ function work()
 
 function parse_arg()
 {
-    if ARGS=$(getopt -o a:bcdghtu: -l "help" -- "$@") ; then
+    if ARGS=$(getopt -o a:bcdghp:tu: -l "help" -- "$@") ; then
         echo ARGS="$ARGS"
         eval set -- "${ARGS}"
     else
@@ -337,6 +340,7 @@ function parse_arg()
             -c) DIFF_MODE="current";;
             -d) DIFF_MODE="commit";;
             -g) GENERATE_DIFF=1;;
+            -p) shift; DIFF_PATH=$1;;
             -t) ALIAS=$TIME;;
             -u) shift; UNTRACK=$1;;
             -h|--help) usage; exit 0;;
